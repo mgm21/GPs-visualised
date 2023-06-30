@@ -11,6 +11,8 @@ class GaussianProcess:
 
         # Problem parameters
         self.x_start, self.x_stop = 0, 10
+        self.num_points = 100
+        self. x_problem = np.linspace(start=self.x_start, stop=self.x_stop, num=self.num_points)
         self.x_seen = []
         self.y_seen = []
 
@@ -30,6 +32,8 @@ class GaussianProcess:
     def true_func(self, x):
         return np.sin(x)
 
+    # TODO: replace all the x_seen, y_seen, etc... occurrences with the attributes from the class self.x_seen,
+    #  etc... (maybe?)
     def k_vec(self, x, x_seen):
         return [self.k(x, xi) for xi in x_seen]
 
@@ -60,9 +64,16 @@ class GaussianProcess:
         self.x_seen.extend(x)
         self.y_seen.extend(self.true_func(x))
 
+    def query_acquisition_function(self):
+        # Returns
+        return (self.x_stop - self.x_start) \
+            * (np.argmax(self.mu_new(self.x_problem, self.x_seen, self.y_seen)) + 1) \
+            / self.num_points
+
+
     def plot_all(self, savefig=True):
         # Set up the plotting environment
-        xplot = np.linspace(start=self.x_start, stop=self.x_stop, num=100)
+        xplot = self.x_problem
         plt.figure()
 
         # Plot the true, hidden, function
@@ -82,8 +93,8 @@ class GaussianProcess:
                     alpha=0.4)
 
         # Edit plot layout
-        plt.tick_params(left=False, right=False, labelleft=False,
-                        labelbottom=False, bottom=False)
+        # plt.tick_params(left=False, right=False, labelleft=False,
+        #                 labelbottom=False, bottom=False)
         plt.legend()
 
         if savefig:

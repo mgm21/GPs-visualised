@@ -4,7 +4,8 @@ from gaussian_process import GaussianProcess
 agent = GaussianProcess()
 
 # Make agent observe some true points
-agent.observe_true_points([2, 5, 6, 7, 8])
+agent.observe_true_points([])
+print(agent.query_acquisition_function())
 
 # Plot
 agent.plot_all(savefig=False)
