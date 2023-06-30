@@ -3,45 +3,53 @@ import matplotlib.pyplot as plt
 
 
 class GaussianProcess:
-    def __init__(self, sampling_noise=0.01, amplitude=1, length_scale=1):
+    def __init__(self, sampling_noise=0.01, length_scale=1, kappa=1):
         # GP parameters
         self.sampling_noise = sampling_noise
-        self.amplitude = amplitude
         self.length_scale = length_scale
+        self.kappa = kappa
 
-        # Problem parameters
+        # Problem parameters (akin to quality-diversity behavioural descriptor bounds and resolution)
         self.x_start, self.x_stop = 0, 10
         self.num_points = 100
-        self. x_problem = np.linspace(start=self.x_start, stop=self.x_stop, num=self.num_points)
+        self.x_problem = np.linspace(start=self.x_start, stop=self.x_stop, num=self.num_points)
         self.x_seen = []
         self.y_seen = []
 
         # Plotting parameters
         self.plot_col = "cornflowerblue"
+        self.show_axes_ticks_labels = True
 
-    def k(self, x1, x2):
-        return self.amplitude ** 2 * np.exp(-0.5 * (np.abs(x1 - x2) / self.length_scale) ** 2)
+    def kernel_func(self, x1, x2):
+        # Squared exponential kernel (naive but works for 1-D toy example) see Brochu tutorial p.9
+        return np.exp(-0.5 * (np.abs(x2 - x1) / self.length_scale) ** 2)
 
     def mu_0(self, x):
-        return np.array([0 for _ in x])
+        return np.zeros(shape=len(x))
 
     def var_0(self, x):
-        return np.array([self.k(xi, xi) for xi in x]) + self.sampling_noise
+        # Never called.
+        return np.array([self.kernel_func(xi, xi) for xi in x]) + self.sampling_noise
 
     # TODO: think of a way to have a different true_func for every GP, though maybe the same prior...
+    #  maybe best is to define the true function as both a list (attribute) and a function which produced it
+    #  and then define functions to move back and forth between the index world and the x value world.
+    #  BOOKMARK
     def true_func(self, x):
-        return np.sin(x)
+        return [sum(x) for x in zip([np.sin(3*j) for j in x], [2 * i for i in x])]
 
     # TODO: replace all the x_seen, y_seen, etc... occurrences with the attributes from the class self.x_seen,
-    #  etc... (maybe?)
+    #  etc... (maybe?): think about how it will work when you have several
+    # TODO: best thing for now is to keep because it does not hurt anything else than readability; meaning, develop
+    #  the code further to know if it was required or not and then can remove once an MVP of the complete code is done.
     def k_vec(self, x, x_seen):
-        return [self.k(x, xi) for xi in x_seen]
+        return [self.kernel_func(x, xi) for xi in x_seen]
 
     def K_mat(self, x_seen):
         mat = np.zeros(shape=(len(x_seen), len(x_seen)))
         for i in range(len(x_seen)):
             for j in range(len(x_seen)):
-                mat[i, j] = self.k(x_seen[i], x_seen[j])
+                mat[i, j] = self.kernel_func(x_seen[i], x_seen[j])
         return mat
 
     def mu_new(self, x, x_seen, y_seen):
@@ -55,7 +63,8 @@ class GaussianProcess:
 
         var = []
         for i in range(len(x)):
-            var += [self.k(x[i], x[i]) + self.sampling_noise - np.transpose(self.k_vec(x[i], x_seen)) @ np.linalg.inv(
+            var += [self.kernel_func(x[i], x[i]) + self.sampling_noise - np.transpose(
+                self.k_vec(x[i], x_seen)) @ np.linalg.inv(
                 K_computed + self.sampling_noise * np.identity(n=np.shape(K_computed)[0])) @ self.k_vec(x[i], x_seen)]
 
         return var
@@ -65,11 +74,14 @@ class GaussianProcess:
         self.y_seen.extend(self.true_func(x))
 
     def query_acquisition_function(self):
-        # Returns
-        return (self.x_stop - self.x_start) \
-            * (np.argmax(self.mu_new(self.x_problem, self.x_seen, self.y_seen)) + 1) \
-            / self.num_points
 
+        gp_mean = self.mu_new(self.x_problem, self.x_seen, self.y_seen)
+        gp_var = self.var_new(self.x_problem, self.x_seen)
+
+        max_val_index = np.argmax(gp_mean + [i * self.kappa for i in gp_var])
+        max_val_xloc = (self.x_stop - self.x_start) * (max_val_index + 1) / self.num_points
+
+        return max_val_xloc
 
     def plot_all(self, savefig=True):
         # Set up the plotting environment
@@ -92,12 +104,14 @@ class GaussianProcess:
                     zorder=2, linewidths=1, s=40,
                     alpha=0.4)
 
-        # Edit plot layout
-        # plt.tick_params(left=False, right=False, labelleft=False,
-        #                 labelbottom=False, bottom=False)
         plt.legend()
 
+        # Edit plot layout
+        if self.show_axes_ticks_labels:
+            plt.tick_params(left=False, right=False, labelleft=False,
+                            labelbottom=False, bottom=False)
+
         if savefig:
-            plt.savefig("example-sin", dpi=50)
+            plt.savefig("example-sin", dpi=20)
 
         plt.show()
