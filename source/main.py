@@ -10,5 +10,7 @@ agent.observe_true_points([5])
 print(agent.query_acquisition_function())
 
 # Plot
-agent.plot_all_plotly()
-agent.plot_all_matplotlib(savefig=False)
+# fig = agent.plot_all_plotly()
+# fig.show()
+# agent.plot_all_matplotlib(savefig=False)
+agent.start_interactive_gp_dash_app()

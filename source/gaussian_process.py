@@ -3,10 +3,13 @@ import matplotlib.pyplot as plt
 import plotly.express as px
 import plotly.graph_objects as go
 import pandas as pd
+import ipywidgets
+from dash import Dash, dcc, html, Output, Input, State, callback
+import plotly.express as px
 
 
 class GaussianProcess:
-    def __init__(self, sampling_noise=0.01, length_scale=1, kappa=1):
+    def __init__(self, sampling_noise=0, length_scale=1, kappa=1):
         # GP parameters
         self.sampling_noise = sampling_noise
         self.length_scale = length_scale
@@ -28,7 +31,8 @@ class GaussianProcess:
         return np.exp(-0.5 * ((x2 - x1) / self.length_scale) ** 2)
 
     def mu_0(self, x):
-        return np.sin(3 * x) + 1.5 * x
+        # TODO: must fix why when mu_0 is different to true_func, the GP behaves in a strange way.
+        return np.sin(3 * x) + 2 * x
 
     # def var_0(self, x):
     #     # Never called
@@ -88,19 +92,9 @@ class GaussianProcess:
         y_lower = mu_new - var_new
 
         # Build the Plotly figure
-        fig = go.Figure([
+        fig = go.FigureWidget([
 
-            # True function
-            go.Scatter(x=xplot,
-                       y=self.true_func(xplot),
-                       line=dict(color=self.plot_col, dash='dot', width=4),
-                       name="True function"),
-
-            # GP mean
-            go.Scatter(x=xplot,
-                       y=mu_new,
-                       line=dict(color=self.plot_col),
-                       name="GP mean"),
+            # Note: ordering is important for click events (last Scatter added is never covered by others)
 
             # GP uncertainty
             go.Scatter(x=np.append(xplot, xplot[::-1]),
@@ -108,6 +102,18 @@ class GaussianProcess:
                        fill='toself',
                        line=dict(color=self.plot_col),
                        name="GP uncertainty"),
+
+            # GP mean
+            go.Scatter(x=xplot,
+                       y=mu_new,
+                       line=dict(color=self.plot_col),
+                       name="GP mean"),
+
+            # True function
+            go.Scatter(x=xplot,
+                       y=self.true_func(xplot),
+                       line=dict(color=self.plot_col, dash='dash', width=4),
+                       name="True function"),
 
             # Observed points
             go.Scatter(x=self.x_seen,
@@ -118,7 +124,7 @@ class GaussianProcess:
                        opacity=0.5)
         ])
 
-        fig.show()
+        return fig
 
     def plot_all_matplotlib(self, savefig=True):
         # Set up the plotting environment
@@ -130,6 +136,7 @@ class GaussianProcess:
 
         # Plot the updated GP mean and uncertainty
         plt.plot(xplot, self.mu_new(xplot, self.x_seen, self.y_seen), color=self.plot_col, label="GP mean", zorder=1)
+        # noinspection PyTypeChecker
         plt.fill_between(xplot,
                          self.mu_new(xplot, self.x_seen, self.y_seen) - self.var_new(xplot, self.x_seen),
                          self.mu_new(xplot, self.x_seen, self.y_seen) + self.var_new(xplot, self.x_seen),
@@ -153,10 +160,32 @@ class GaussianProcess:
 
         plt.show()
 
-# TODO:
+    def start_interactive_gp_dash_app(self):
+        # Based on last part of tutorial: https://www.youtube.com/watch?v=pNMWbY0AUJ0&t=1531s
+        initial_fig = self.plot_all_plotly()
+        app = Dash(__name__)
 
-# TODO: replace all the x_seen, y_seen, etc... occurrences with the attributes from the class self.x_seen,
-#  etc... (maybe?): think about how it will work when you have several
+        app.layout = html.Div(
+            dcc.Graph(figure=initial_fig, id='gp-graph', style={"height": "100vh"})
+        )
+
+        @callback(
+            Output(component_id='gp-graph', component_property='figure'),
+            Input(component_id='gp-graph', component_property='clickData'),
+            prevent_initial_call=True
+        )
+        def update_gp(point_clicked):  # the function argument comes from the component property of the Input
+            x = point_clicked['points'][0]['x']
+            self.observe_true_points(x)
+            fig = self.plot_all_plotly()
+            # print(point_clicked)
+            # print(type(point_clicked))
+            # print(x)
+            return fig
+
+        app.run(port=8000)
+
+# TODO:
 
 # TODO: best thing for now is to keep because it does not hurt anything else than readability; meaning, develop
 #  the code further to know if it was required or not and then can remove once an MVP of the complete code is done.
@@ -164,3 +193,6 @@ class GaussianProcess:
 # TODO: think of a way to have a different true_func for every GP, though maybe the same prior...
 #  maybe best is to define the true function as both a list (attribute) and a function which produced it
 #  and then define functions to move back and forth between the index world and the x value world.
+
+# TODO: ultimately add functionality to remove some points from the "seen_points" this way you don't have to reload
+#  the application and you can do most things dynamically.
