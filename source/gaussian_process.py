@@ -94,7 +94,11 @@ class GaussianProcess:
 
     def update_gp(self, x_clicked):
         if x_clicked in self.x_seen:
-            # This is a point that the user would like to remove
+            # # TODO: is this sub-statement necessary? If the optimisation is done it will be stuck anyway.
+            # #  removed it for now
+            # if x_clicked != self.query_acquisition_function():
+            #     # This is a point that the user would like to remove
+            #     # If the acquisition is suggesting a point that was already there, do not remove
             self.unobserve_true_points(x_clicked)
         else:
             self.observe_true_points(x_clicked)
@@ -111,6 +115,8 @@ class GaussianProcess:
         xplot = self.x_problem
         y_upper = mu_new + var_new
         y_lower = mu_new - var_new
+        # The suggested x location is cast to a numpy array because mu_0 must receive array to behave as intended
+        acquisition_x_suggestion = np.array([self.query_acquisition_function()])
 
         # Build the Plotly figure
         fig = go.FigureWidget([
@@ -142,7 +148,15 @@ class GaussianProcess:
                        mode="markers",
                        name="Observed points",
                        marker=dict(color="black", size=10),
-                       opacity=0.5)
+                       opacity=0.5),
+
+            # Acquisition function suggestion
+            go.Scatter(x=acquisition_x_suggestion,
+                       y=self.mu_new(acquisition_x_suggestion, self.x_seen, self.y_seen),
+                       marker=dict(color="red", size=10),
+                       mode="markers",
+                       opacity=0.5,
+                       name="Acquisition suggestion")
         ])
 
         return fig
