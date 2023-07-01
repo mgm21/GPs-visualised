@@ -92,6 +92,18 @@ class GaussianProcess:
 
         return max_val_x_loc
 
+    def update_gp(self, x_clicked):
+        if x_clicked in self.x_seen:
+            # This is a point that the user would like to remove
+            self.unobserve_true_points(x_clicked)
+        else:
+            self.observe_true_points(x_clicked)
+
+        fig = self.generate_plotly_figure()
+
+        return fig
+
+
     def generate_plotly_figure(self):
         # Compute/Define the required arrays once
         mu_new = self.mu_new(self.x_problem, self.x_seen, self.y_seen)
@@ -183,20 +195,14 @@ class GaussianProcess:
             Input(component_id='gp-graph', component_property='clickData'),
             prevent_initial_call=True
         )
-        def update_gp(point_clicked):  # the function argument comes from the component property of the Input
+        def update_plot(point_clicked):  # the function argument comes from the component property of the Input
             x = point_clicked['points'][0]['x']
 
-            if x in self.x_seen:
-                # This is a point that the user would like to remove
-                self.unobserve_true_points(x)
-            else:
-                self.observe_true_points(x)
+            fig = self.update_gp(x_clicked=x)
 
-            fig = self.generate_plotly_figure()
-
-            # print(point_clicked)
-            # print(type(point_clicked))
-            # print(x)
+            print(point_clicked)
+            print(type(point_clicked))
+            print(x)
 
             return fig
 
@@ -204,8 +210,17 @@ class GaussianProcess:
 
 # TODO:
 
-# TODO: fix the bizarre relationship between the clicking update and the mu_0 function (compare matplotlib and plotly
-#  to get an idea of why this is happening. Also reset mu_0 to just 0s and see how the program behaves.
+# TODO: decouple the visualisation from the GP system. Because, you must imagine having many GPs with one visualisation.
+#  So, you must have a Plotter/Displayer class which can accept AN ARRAY of GaussianProcess objects.
+#  And, it must update them all, whenever someone clicks on the particular curve. Will have to somehow find a way
+#  to know which graph has been pressed... I have found the way. When you print the (point_clicked) object in the
+#  update_gp method, the meta-data tells you which curve was pressed. If I'm lucky, the curve number will have to do
+#  with which GP has been pressed. That said, could also look for the callback documentation, maybe the meta data allows
+#  to retrieve the legend of the curve that was pressed. In that case, could start all the legends for one family with
+#  the number 1 for example, then we would know that the agent to .update [side note could have a method which incorporates
+#  all the logic in lines 189 to 195 of the update_gp method right above] is the one with that index and the agents
+#  could be named accordingly with order that they were passed and therefore plotted.
+
 
 # TODO: best thing for now is to keep because it does not hurt anything else than readability; meaning, develop
 #  the code further to know if it was required or not and then can remove once an MVP of the complete code is done.
