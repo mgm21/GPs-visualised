@@ -6,9 +6,9 @@ agent = GaussianProcess(sampling_noise=0, kappa=5)
 
 # TODO: try to understand why the trialled optimisation using ITE below with the acquisition did not converge
 # Make agent observe some true points
-agent.observe_true_points([5, 7])
+agent.observe_true_points([5])
 print(agent.query_acquisition_function())
 
 # Plot
-agent.plot_all(savefig=False)
-
+agent.plot_all_plotly()
+agent.plot_all_matplotlib(savefig=False)

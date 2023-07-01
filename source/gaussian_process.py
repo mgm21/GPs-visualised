@@ -1,5 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import plotly.express as px
+import plotly.graph_objects as go
+import pandas as pd
 
 
 class GaussianProcess:
@@ -76,7 +79,48 @@ class GaussianProcess:
 
         return max_val_x_loc
 
-    def plot_all(self, savefig=True):
+    def plot_all_plotly(self):
+        # Compute/Define the required arrays once
+        mu_new = self.mu_new(self.x_problem, self.x_seen, self.y_seen)
+        var_new = self.var_new(self.x_problem, self.x_seen)
+        xplot = self.x_problem
+        y_upper = mu_new + var_new
+        y_lower = mu_new - var_new
+
+        # Build the Plotly figure
+        fig = go.Figure([
+
+            # True function
+            go.Scatter(x=xplot,
+                       y=self.true_func(xplot),
+                       line=dict(color=self.plot_col, dash='dot', width=4),
+                       name="True function"),
+
+            # GP mean
+            go.Scatter(x=xplot,
+                       y=mu_new,
+                       line=dict(color=self.plot_col),
+                       name="GP mean"),
+
+            # GP uncertainty
+            go.Scatter(x=np.append(xplot, xplot[::-1]),
+                       y=np.append(y_upper, y_lower[::-1]),
+                       fill='toself',
+                       line=dict(color=self.plot_col),
+                       name="GP uncertainty"),
+
+            # Observed points
+            go.Scatter(x=self.x_seen,
+                       y=self.true_func(self.x_seen),
+                       mode="markers",
+                       name="Observed points",
+                       marker=dict(color="black", size=10),
+                       opacity=0.5)
+        ])
+
+        fig.show()
+
+    def plot_all_matplotlib(self, savefig=True):
         # Set up the plotting environment
         xplot = self.x_problem
         plt.figure()
