@@ -32,7 +32,7 @@ class GaussianProcess:
 
     def mu_0(self, x):
         # TODO: must fix why when mu_0 is different to true_func, the GP behaves in a strange way.
-        return np.sin(3 * x) + 2 * x
+        return np.zeros(shape=x.shape[0])
 
     # def var_0(self, x):
     #     # Never called
@@ -47,10 +47,12 @@ class GaussianProcess:
     def K_mat(self, x_seen):
         n = len(x_seen)
         mat = np.zeros(shape=(n, n))
+
         for i in range(n):
             for j in range(i, n):
-                # Using the symmetry of the kernel matrix
+                # Make use of symmetry to halve the computation of the Kernel matrix
                 mat[i, j] = self.kernel_func(x_seen[i], x_seen[j])
+                mat[j, i] = mat[i, j]
         return mat
 
     def mu_new(self, x, x_seen, y_seen):
@@ -186,6 +188,9 @@ class GaussianProcess:
         app.run(port=8000)
 
 # TODO:
+
+# TODO: fix the bizarre relationship between the clicking update and the mu_0 function (compare matplotlib and plotly
+#  to get an idea of why this is happening. Also reset mu_0 to just 0s and see how the program behaves.
 
 # TODO: best thing for now is to keep because it does not hurt anything else than readability; meaning, develop
 #  the code further to know if it was required or not and then can remove once an MVP of the complete code is done.
