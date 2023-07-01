@@ -6,7 +6,7 @@ agent = GaussianProcess(sampling_noise=0.00, kappa=5)
 
 # TODO: try to understand why the trialled optimisation using ITE below with the acquisition did not converge
 # Make agent observe some true points
-agent.observe_true_points([5, 7, 6])
+agent.observe_true_points([])
 print(agent.query_acquisition_function())
 
 # Plot

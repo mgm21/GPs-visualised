@@ -76,6 +76,13 @@ class GaussianProcess:
         self.x_seen = np.append(self.x_seen, x)
         self.y_seen = np.append(self.y_seen, self.true_func(x))
 
+
+    def unobserve_true_points(self, x):
+        x = np.array(x)
+        index = np.where(self.x_seen == x)
+        self.x_seen = np.delete(self.x_seen, index)
+        self.y_seen = np.delete(self.y_seen, index)
+
     def query_acquisition_function(self):
         gp_mean = self.mu_new(self.x_problem, self.x_seen, self.y_seen)
         gp_var = self.var_new(self.x_problem, self.x_seen)
@@ -85,7 +92,7 @@ class GaussianProcess:
 
         return max_val_x_loc
 
-    def plot_all_plotly(self):
+    def generate_plotly_figure(self):
         # Compute/Define the required arrays once
         mu_new = self.mu_new(self.x_problem, self.x_seen, self.y_seen)
         var_new = self.var_new(self.x_problem, self.x_seen)
@@ -164,7 +171,7 @@ class GaussianProcess:
 
     def start_interactive_gp_dash_app(self):
         # Based on last part of tutorial: https://www.youtube.com/watch?v=pNMWbY0AUJ0&t=1531s
-        initial_fig = self.plot_all_plotly()
+        initial_fig = self.generate_plotly_figure()
         app = Dash(__name__)
 
         app.layout = html.Div(
@@ -178,11 +185,19 @@ class GaussianProcess:
         )
         def update_gp(point_clicked):  # the function argument comes from the component property of the Input
             x = point_clicked['points'][0]['x']
-            self.observe_true_points(x)
-            fig = self.plot_all_plotly()
+
+            if x in self.x_seen:
+                # This is a point that the user would like to remove
+                self.unobserve_true_points(x)
+            else:
+                self.observe_true_points(x)
+
+            fig = self.generate_plotly_figure()
+
             # print(point_clicked)
             # print(type(point_clicked))
             # print(x)
+
             return fig
 
         app.run(port=8000)
