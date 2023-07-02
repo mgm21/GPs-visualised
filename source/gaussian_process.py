@@ -22,10 +22,6 @@ class GaussianProcess:
         self.x_seen = np.array([])
         self.y_seen = np.array([])
 
-        # Plotting parameters
-        self.plot_col = "cornflowerblue"
-        self.show_axes_ticks_labels = True
-
     def kernel_func(self, x1, x2):
         # Squared exponential kernel (naive but works for 1-D toy example) see Brochu tutorial p.9
         return np.exp(-0.5 * ((x2 - x1) / self.length_scale) ** 2)
@@ -76,7 +72,6 @@ class GaussianProcess:
         self.x_seen = np.append(self.x_seen, x)
         self.y_seen = np.append(self.y_seen, self.true_func(x))
 
-
     def unobserve_true_points(self, x):
         x = np.array(x)
         index = np.where(self.x_seen == x)
@@ -106,7 +101,6 @@ class GaussianProcess:
         fig = self.generate_plotly_figure()
 
         return fig
-
 
     def generate_plotly_figure(self):
         # Compute/Define the required arrays once
@@ -231,10 +225,14 @@ class GaussianProcess:
 #  update_gp method, the meta-data tells you which curve was pressed. If I'm lucky, the curve number will have to do
 #  with which GP has been pressed. That said, could also look for the callback documentation, maybe the meta data allows
 #  to retrieve the legend of the curve that was pressed. In that case, could start all the legends for one family with
-#  the number 1 for example, then we would know that the agent to .update [side note could have a method which incorporates
-#  all the logic in lines 189 to 195 of the update_gp method right above] is the one with that index and the agents
+#  the number 1 for example, then we would know that the agent to self.update_gp is the one with that index and the agents
 #  could be named accordingly with order that they were passed and therefore plotted.
+#  for the plotter class, all the references to 'self' in the above will have to be changed to agent.
+#  and some kind of functionality to plot all the agents and only modify the ones that need modifying will have to be
+#  included.
 
+# TODO: include an animation component whereby the optimisation can be done automatically wiht a sleep call in between
+#  replotting.
 
 # TODO: best thing for now is to keep because it does not hurt anything else than readability; meaning, develop
 #  the code further to know if it was required or not and then can remove once an MVP of the complete code is done.
