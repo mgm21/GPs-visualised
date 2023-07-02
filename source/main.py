@@ -10,7 +10,8 @@ for i in range(num_gps):
 
 # Plot
 visualiser = Visualiser()
-visualiser.generate_plotly_figure(agents[:4])
+visualiser.start_interactive_gp_dash_app(agents[:3])
+# visualiser.generate_plotly_figure(agents[:4])
 # visualiser.plot_gps_matplotlib(agents[:4])
 
 
