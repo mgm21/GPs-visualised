@@ -10,7 +10,8 @@ for i in range(num_gps):
 
 # Plot
 visualiser = Visualiser()
-visualiser.plot_gps_matplotlib(agents[:4])
+visualiser.generate_plotly_figure(agents[:4])
+# visualiser.plot_gps_matplotlib(agents[:4])
 
 
 # TODO: try to understand why increasing the sampling noise makes the mean no longer go through the true function

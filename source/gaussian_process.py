@@ -155,40 +155,6 @@ class GaussianProcess:
 
         return fig
 
-    def plot_all_matplotlib(self, savefig=True):
-        # Set up the plotting environment
-        xplot = self.x_problem
-        plt.figure()
-
-        # Plot the true, hidden, function
-        plt.plot(xplot, self.true_func(xplot), color=self.plot_col, linestyle="--", label="True function", zorder=1)
-
-        # Plot the updated GP mean and uncertainty
-        plt.plot(xplot, self.mu_new(xplot, self.x_seen, self.y_seen), color=self.plot_col, label="GP mean", zorder=1)
-        # noinspection PyTypeChecker
-        plt.fill_between(xplot,
-                         self.mu_new(xplot, self.x_seen, self.y_seen) - self.var_new(xplot, self.x_seen),
-                         self.mu_new(xplot, self.x_seen, self.y_seen) + self.var_new(xplot, self.x_seen),
-                         color=self.plot_col,
-                         alpha=0.4)
-
-        # Plot the "seen" points
-        plt.scatter(self.x_seen, self.true_func(self.x_seen), color="black", marker=".", label="Observed points",
-                    zorder=2, linewidths=1, s=40,
-                    alpha=0.4)
-
-        plt.legend()
-
-        # Edit plot layout
-        if self.show_axes_ticks_labels:
-            plt.tick_params(left=False, right=False, labelleft=False,
-                            labelbottom=False, bottom=False)
-
-        if savefig:
-            plt.savefig("example-sin", dpi=20)
-
-        plt.show()
-
     def start_interactive_gp_dash_app(self):
         # Based on last part of tutorial: https://www.youtube.com/watch?v=pNMWbY0AUJ0&t=1531s
         initial_fig = self.generate_plotly_figure()
