@@ -5,17 +5,21 @@ import numpy as np
 # Define the Gaussian Process(s)
 agents = [
     GaussianProcess(true_func=lambda x: np.sin(3.5 * x) + 2 * x,
-                    mu_0=lambda x: np.sin(3.5 * x) + 2.5 * x),
+                    mu_0=lambda x: np.sin(3.5 * x) + 2.5 * x,
+                    kappa=0.05,
+                    rho=0.4,
+                    kernel="matern"),
 
     GaussianProcess(true_func=lambda x: np.sin(2 * x) + 2 * x,
+                    mu_0=lambda x: np.zeros(x.shape[0])),
+
+    GaussianProcess(true_func=lambda x: np.sin(4 * x) + 3 * x,
                     mu_0=lambda x: np.zeros(x.shape[0]))
 ]
 
-# Plot
+# Experiments
 visualiser = Visualiser()
-visualiser.start_interactive_gp_dash_app(agents)
-# visualiser.generate_plotly_figure(agents[:4])
-# visualiser.plot_gps_matplotlib(agents[:4])
+visualiser.visualise_ITE_experiment(agents[0], alpha=0.9)
 
 
 # TODO: try to understand why increasing the sampling noise makes the mean no longer go through the true function

@@ -40,44 +40,45 @@ class Visualiser:
 
             # GP uncertainty
             fig.add_scatter(x=np.append(xplot, xplot[::-1]),
-                       y=np.append(y_upper, y_lower[::-1]),
-                       fill='toself',
-                       line=dict(color=gp.plot_col),
-                       name=f"{i} GP uncertainty"),
+                            y=np.append(y_upper, y_lower[::-1]),
+                            fill='toself',
+                            line=dict(color=gp.plot_col),
+                            name=f"{i} GP uncertainty"),
 
             # GP mean
             fig.add_scatter(x=xplot,
-                       y=mu_new,
-                       line=dict(color=gp.plot_col),
-                       name=f"{i} GP mean"),
+                            y=mu_new,
+                            line=dict(color=gp.plot_col),
+                            name=f"{i} GP mean"),
 
             # True function
             fig.add_scatter(x=xplot,
-                       y=gp.true_func(xplot),
-                       line=dict(color=gp.plot_col, dash='dash', width=4),
-                       name=f"{i} True function"),
+                            y=gp.true_func(xplot),
+                            line=dict(color=gp.plot_col, dash='dash', width=4),
+                            name=f"{i} True function"),
 
             # Observed points
             fig.add_scatter(x=gp.x_seen,
-                       y=gp.true_func(gp.x_seen),
-                       mode="markers",
-                       name=f"{i} Observed points",
-                       marker=dict(color=gp.plot_col, size=10),
-                       opacity=0.5),
+                            y=gp.true_func(gp.x_seen),
+                            mode="markers",
+                            name=f"{i} Observed points",
+                            marker=dict(color=gp.plot_col, size=10),
+                            opacity=0.5),
 
             # Acquisition function suggestion
             fig.add_scatter(x=acquisition_x_suggestion,
-                       y=gp.mu_new(acquisition_x_suggestion, gp.x_seen, gp.y_seen),
-                       marker=dict(color=gp.plot_col, size=10, symbol="cross"),
-                       mode="markers",
-                       opacity=0.5,
-                       name=f"{i} Acquisition suggestion")
+                            y=gp.mu_new(acquisition_x_suggestion, gp.x_seen, gp.y_seen),
+                            marker=dict(color="black", size=10, symbol="cross"),
+                            mode="markers",
+                            opacity=0.5,
+                            name=f"{i} Acquisition suggestion")
 
         return fig
 
-    def start_interactive_gp_dash_app(self, gps_arr):
+    def visualise_example_experiment(self, gps_arr):
         # Based on last part of tutorial: https://www.youtube.com/watch?v=pNMWbY0AUJ0&t=1531s
         initial_fig = self.generate_plotly_figure(gps_arr)
+
         app = Dash(__name__)
 
         app.layout = html.Div(
@@ -103,6 +104,63 @@ class Visualiser:
             print(point_clicked)
             print(type(point_clicked))
             print(x)
+
+            return fig
+
+        app.run(port=8000)
+
+    def add_ITE_threshold_to_fig(self, fig, gp, alpha):
+        # TODO: move the threshold_val calculation to the GaussianProcess class.
+        threshold_val = np.repeat(a=alpha * np.max(gp.mu_new(gp.x_problem, gp.x_seen, gp.y_seen)),
+                                  repeats=len(gp.x_problem))
+        fig.add_scatter(x=gp.x_problem,
+                        y=threshold_val,
+                        line=dict(color="red", dash='dash', width=4),
+                        name=f"End condition")
+
+        return fig
+
+    def visualise_ITE_experiment(self, gp, alpha):
+        initial_fig = self.generate_plotly_figure([gp])
+        # TODO: make the following into a function to not repeat the code below
+
+        initial_fig = self.add_ITE_threshold_to_fig(initial_fig, gp, alpha)
+        initial_fig.update_layout(
+            title=dict(text="ITE Experiment", font=dict(size=50), automargin=False, yref='paper'),
+            title_x=0.5
+        )
+
+        app = Dash(__name__)
+
+        app.layout = html.Div(
+            dcc.Graph(figure=initial_fig, id='gp-graph', style={"height": "100vh"})
+        )
+
+        @callback(
+            Output(component_id='gp-graph', component_property='figure'),
+            Input(component_id='gp-graph', component_property='clickData'),
+            prevent_initial_call=True
+        )
+        def update_plot(point_clicked):  # the function argument comes from the component property of the Input
+            x = point_clicked['points'][0]['x']
+
+            index_clicked_curve = point_clicked['points'][0]['curveNumber']
+            gp_index = index_clicked_curve // self.num_plotly_objects_per_gp
+
+            # print(index_clicked_curve)
+            # print(gp_index)
+
+            gp.update_gp(x_clicked=x)
+            fig = self.generate_plotly_figure([gp])
+            fig = self.add_ITE_threshold_to_fig(fig, gp, alpha)
+            fig.update_layout(
+                title=dict(text="ITE Experiment", font=dict(size=50), automargin=False, yref='paper'),
+                title_x=0.5
+            )
+
+            # print(point_clicked)
+            # print(type(point_clicked))
+            # print(x)
 
             return fig
 

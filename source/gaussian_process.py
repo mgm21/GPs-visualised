@@ -1,11 +1,4 @@
 import numpy as np
-import matplotlib.pyplot as plt
-import plotly.express as px
-import plotly.graph_objects as go
-import pandas as pd
-import ipywidgets
-from dash import Dash, dcc, html, Output, Input, State, callback
-import plotly.express as px
 
 
 class GaussianProcess:
@@ -13,6 +6,8 @@ class GaussianProcess:
                  sampling_noise=0,
                  length_scale=1,
                  kappa=5,
+                 kernel="squared_exponential",
+                 rho=0.5,
                  true_func=lambda x: np.sin(3 * x) + 2 * x,
                  mu_0=lambda x: np.zeros(shape=x.shape[0])):
         # GP parameters
@@ -21,6 +16,8 @@ class GaussianProcess:
         self.kappa = kappa
         self.true_func = true_func
         self.mu_0 = mu_0
+        self.kernel = kernel
+        self.rho = rho
 
         # Problem parameters
         self.x_start, self.x_stop = 0, 10
@@ -30,8 +27,17 @@ class GaussianProcess:
         self.y_seen = np.array([])
 
     def kernel_func(self, x1, x2):
-        # Squared exponential kernel (naive but works for 1-D toy example) see Brochu tutorial p.9
-        return np.exp(-0.5 * ((x2 - x1) / self.length_scale) ** 2)
+        if self.kernel == "squared_exponential":
+            return np.exp(-0.5 * ((x2 - x1) / self.length_scale) ** 2)
+
+        elif self.kernel == "matern":
+            # Note that the Euclidian distance were given as np.abs(x1-x2): defined for 1-D
+            return (1 + ((np.sqrt(5) * np.abs(x1 - x2)) / self.rho) +
+                    ((5 * np.abs(x1 - x2) ** 2) / (3 * self.rho ** 2))) * np.exp(
+                -((np.sqrt(5) * np.abs(x1 - x2)) / self.rho))
+
+        else:
+            print("I'm sorry I do not recognise this kernel. Try: squared_exponential or matern")
 
     # def mu_0(self, x):
     #     return np.zeros(shape=x.shape[0])
