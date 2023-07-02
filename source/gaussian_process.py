@@ -5,13 +5,15 @@ class GaussianProcess:
     def __init__(self,
                  sampling_noise=0,
                  length_scale=1,
-                 kappa=5,
+                 vertical_scale=0.5,
+                 kappa=0.05,
                  kernel="squared_exponential",
-                 rho=0.5,
+                 rho=0.4,
                  true_func=lambda x: np.sin(3 * x) + 2 * x,
                  mu_0=lambda x: np.zeros(shape=x.shape[0])):
         # GP parameters
         self.sampling_noise = sampling_noise
+        self.vertical_scale = vertical_scale
         self.length_scale = length_scale
         self.kappa = kappa
         self.true_func = true_func
@@ -21,7 +23,7 @@ class GaussianProcess:
 
         # Problem parameters
         self.x_start, self.x_stop = 0, 10
-        self.num_points = 100
+        self.num_points = 200
         self.x_problem = np.linspace(start=self.x_start, stop=self.x_stop, num=self.num_points)
         self.x_seen = np.array([])
         self.y_seen = np.array([])

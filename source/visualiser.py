@@ -11,7 +11,7 @@ import plotly.express as px
 
 class Visualiser:
     def __init__(self):
-        self.plot_cols = ["cornflowerblue", "tan", "seagreen", "lightcoral", "mediumorchid"]
+        self.plot_cols = ["cornflowerblue", "tan", "seagreen", "mediumorchid", "silver", "salmon", ]
 
         # Plotly-specific
         self.num_plotly_objects_per_gp = 5
