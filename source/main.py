@@ -1,16 +1,19 @@
 from gaussian_process import GaussianProcess
 from visualiser import Visualiser
+import numpy as np
 
 # Define the Gaussian Process(s)
-num_gps = 4
-agents = []
-for i in range(num_gps):
-    agents += [GaussianProcess(kappa=5)]
-    agents[i].observe_true_points([3*i])
+agents = [
+    GaussianProcess(true_func=lambda x: np.sin(3.5 * x) + 2 * x,
+                    mu_0=lambda x: np.sin(3.5 * x) + 2.5 * x),
+
+    GaussianProcess(true_func=lambda x: np.sin(2 * x) + 2 * x,
+                    mu_0=lambda x: np.zeros(x.shape[0]))
+]
 
 # Plot
 visualiser = Visualiser()
-visualiser.start_interactive_gp_dash_app(agents[:3])
+visualiser.start_interactive_gp_dash_app(agents)
 # visualiser.generate_plotly_figure(agents[:4])
 # visualiser.plot_gps_matplotlib(agents[:4])
 

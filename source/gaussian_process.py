@@ -9,11 +9,18 @@ import plotly.express as px
 
 
 class GaussianProcess:
-    def __init__(self, sampling_noise=0, length_scale=1, kappa=1):
+    def __init__(self,
+                 sampling_noise=0,
+                 length_scale=1,
+                 kappa=5,
+                 true_func=lambda x: np.sin(3 * x) + 2 * x,
+                 mu_0=lambda x: np.zeros(shape=x.shape[0])):
         # GP parameters
         self.sampling_noise = sampling_noise
         self.length_scale = length_scale
         self.kappa = kappa
+        self.true_func = true_func
+        self.mu_0 = mu_0
 
         # Problem parameters
         self.x_start, self.x_stop = 0, 10
@@ -26,16 +33,15 @@ class GaussianProcess:
         # Squared exponential kernel (naive but works for 1-D toy example) see Brochu tutorial p.9
         return np.exp(-0.5 * ((x2 - x1) / self.length_scale) ** 2)
 
-    def mu_0(self, x):
-        # TODO: must fix why when mu_0 is different to true_func, the GP behaves in a strange way.
-        return np.zeros(shape=x.shape[0])
+    # def mu_0(self, x):
+    #     return np.zeros(shape=x.shape[0])
 
     # def var_0(self, x):
     #     # Never called
     #     return np.array([self.kernel_func(xi, xi) for xi in x]) + self.sampling_noise
 
-    def true_func(self, x):
-        return np.sin(3 * x) + 2 * x
+    # def true_func(self, x):
+    #     return np.sin(3 * x) + 2 * x
 
     def k_vec(self, x, x_seen):
         return [self.kernel_func(x, xi) for xi in x_seen]
@@ -113,8 +119,15 @@ class GaussianProcess:
 #  and some kind of functionality to plot all the agents and only modify the ones that need modifying will have to be
 #  included.
 
-# TODO: include an animation component whereby the optimisation can be done automatically wiht a sleep call in between
+# (not a priority) TODO: include an animation component whereby the optimisation can be done automatically wiht a sleep call in between
 #  replotting.
+
+# TODO: make another class Adapter which has multiple adaptation methods: intelligent_trial_and_error (with link to paper)
+#  student_knowledge_... (with link to paper) experience_inheritance (with no link cause that'll be my paper!).
+#  Then use those two to go through the algorithms with Antoine (hopefully tomorrow/this week)
+
+# TODO: replicate perfectly the conditions and parameters from ITE papers including the right kernel etc... to make
+#  a recording of ITE in action.
 
 # TODO: best thing for now is to keep because it does not hurt anything else than readability; meaning, develop
 #  the code further to know if it was required or not and then can remove once an MVP of the complete code is done.
