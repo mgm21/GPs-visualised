@@ -25,6 +25,8 @@ class GaussianProcess:
         self.x_start, self.x_stop = 0, 10
         self.num_points = 200
         self.x_problem = np.linspace(start=self.x_start, stop=self.x_stop, num=self.num_points)
+        # TODO: implement passing some seen points to the constructor. if-statement in constructor to call the
+        #  "observe true points" method
         self.x_seen = np.array([])
         self.y_seen = np.array([])
 
