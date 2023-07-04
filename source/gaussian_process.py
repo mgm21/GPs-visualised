@@ -9,6 +9,7 @@ class GaussianProcess:
                  kappa=0.05,
                  kernel="squared_exponential",
                  rho=0.4,
+                 alpha=0.9,
                  true_func=lambda x: np.sin(3 * x) + 2 * x,
                  mu_0=lambda x: np.zeros(shape=x.shape[0])):
         # GP parameters
@@ -29,6 +30,9 @@ class GaussianProcess:
         #  "observe true points" method
         self.x_seen = np.array([])
         self.y_seen = np.array([])
+        # TODO: figure out which class will have a method called calculate adaptation threshold and then everywhere
+        #  where it is used, call the method. Do not repeat any code.
+        self.alpha = alpha
 
     def kernel_func(self, x1, x2):
         if self.kernel == "squared_exponential":
@@ -113,7 +117,6 @@ class GaussianProcess:
             self.unobserve_true_points(x_clicked)
         else:
             self.observe_true_points(x_clicked)
-
 # TODO:
 
 # TODO: decouple the visualisation from the GP system. Because, you must imagine having many GPs with one visualisation.

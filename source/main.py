@@ -62,3 +62,6 @@ visualiser.visualise_example_experiment(agents[:])
 
 # TODO: try to understand why increasing the sampling noise makes the mean no longer go through the true function
 #  curve (is this normal?)
+
+# TODO: add more ancestors: multiple whose maxes are in the middle (offset the sine by a bit) AND multiple ones who have
+#  the same defect (left side down or right side down) so that it can do good optimisations.
