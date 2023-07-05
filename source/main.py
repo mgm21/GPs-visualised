@@ -4,13 +4,16 @@ from source.core.visualiser import Visualiser
 from agents.example_agents import agents
 
 # Unobserve the points from some GPs
-agents[1].unobserve_true_points(x=agents[1].x_seen)
-print(agents[1].x_seen)
+i = 8
+agents[i].unobserve_true_points(x=agents[i].x_seen)
+# Higher regard for uncertainty works better for toy problem
+# not to get stuck in local maxima
+agents[i].kappa = 3
 
 # Launch the visualisation app
 visualiser = Visualiser()
-visualiser.visualise_ite_plotly(agents[1])
-visualiser.visualise_gpcf_plotly(agents[:3])
+visualiser.visualise_ite_plotly(agents[i])
+# visualiser.visualise_gpcf_plotly(agents[:3])
 
 # Backlog:
 
