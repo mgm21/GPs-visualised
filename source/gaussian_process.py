@@ -11,7 +11,8 @@ class GaussianProcess:
                  rho=0.4,
                  alpha=0.9,
                  true_func=lambda x: np.sin(3 * x) + 2 * x,
-                 mu_0=lambda x: np.zeros(shape=x.shape[0])):
+                 mu_0=lambda x: np.zeros(shape=x.shape[0]),
+                 x_seen=np.array([])):
         # GP parameters
         self.sampling_noise = sampling_noise
         self.vertical_scale = vertical_scale
@@ -26,10 +27,8 @@ class GaussianProcess:
         self.x_start, self.x_stop = 0, 10
         self.num_points = 200
         self.x_problem = np.linspace(start=self.x_start, stop=self.x_stop, num=self.num_points)
-        # TODO: implement passing some seen points to the constructor. if-statement in constructor to call the
-        #  "observe true points" method
-        self.x_seen = np.array([])
-        self.y_seen = np.array([])
+        self.x_seen = np.array(x_seen)
+        self.y_seen = self.true_func(self.x_seen)
         # TODO: figure out which class will have a method called calculate adaptation threshold and then everywhere
         #  where it is used, call the method. Do not repeat any code.
         self.alpha = alpha
@@ -122,6 +121,18 @@ class GaussianProcess:
             self.unobserve_true_points(x_clicked)
         else:
             self.observe_true_points(x_clicked)
+
+
+if __name__ == "__main__":
+    gp = GaussianProcess(x_seen=[1, 2, 3])
+    print(gp.x_seen)
+    print(gp.y_seen)
+
+
+
+
+
+
 # TODO:
 
 # TODO: decouple the visualisation from the GP system. Because, you must imagine having many GPs with one visualisation.
