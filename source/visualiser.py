@@ -1,14 +1,11 @@
-import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib.pyplot as plt
-import plotly.express as px
 import plotly.graph_objects as go
+from dash import Dash, dcc, html, Output, Input, State, callback
+from adapters.gpcf import GPCF
+import plotly.express as px
 import pandas as pd
 import ipywidgets
-from dash import Dash, dcc, html, Output, Input, State, callback
-import plotly.express as px
-from adapters.gpcf import GPCF
-from adapters.ite import ITE
 
 
 class Visualiser:
@@ -255,6 +252,11 @@ class Visualiser:
 
 # BACKLOG
 
+# Todo: put an option to plot reduced curves (it is too crammed right now). For instance gpcf only gets ancestor
+#  means, no point plotting uncertainty and acquisition suggestion (even potentially true function, though that
+#  helps). Could pass in true function as initially hidden. Maybe make that initially hidden and that it
+#  can be toggled. That way, you can have all the information at hand, but it is easy to see in the default setting.
+
 # Todo: check how to update the plots vs re-plotting them at each click
 
 # Todo: I rarely (irreproducibly) got singular matrix error when following through with what the acquisition wanted,
@@ -263,3 +265,5 @@ class Visualiser:
 # Todo: include an animation component whereby the optimisation can be done automatically with a sleep call in
 #  between re-plotting. add a play button to do the whole adaptation process for you without having to click etc...
 #  and this is where the sleep(1) will come in handy.
+
+# Todo: most of the public methods can be collapsed into one with an argument passed to select an experiment/algo
