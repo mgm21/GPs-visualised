@@ -3,7 +3,7 @@ import numpy as np
 
 class GaussianProcess:
     def __init__(self,
-                 sampling_noise=0,
+                 sampling_noise=0.01,
                  length_scale=1,
                  vertical_scale=0.5,
                  kappa=0.05,
