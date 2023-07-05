@@ -33,6 +33,8 @@ class GPCF:
     def optimise_weights(self):
         optim_result = optimize.minimize(fun=self.negative_loglikelihood, x0=self.W)
         self.W = optim_result.x
+        # Normalise weights
+        self.W = self.W / sum(np.abs(self.W))
         print(self.W)
 
     def get_past_gp_mu_vals(self, x):
@@ -61,13 +63,21 @@ if __name__ == "__main__":
     from source.agents.example_agents import agents
 
     agents[0].observe_true_points([1.6, 7.85])
+    agents[1].observe_true_points([0.75, 1.6, 2.5, 7.25, 7.6, 7.85, 8.15, 8.5])
     agents[2].observe_true_points([1.6, 7.85])
     agents[3].observe_true_points([1, 1.6, 2.25, 7.2, 7.85, 8.55])
     agents[4].observe_true_points([1.15, 1.6, 7.85])
     agents[5].observe_true_points([1.6])
 
-    ancestors = [agents[0]] + agents[2:3]
-    current = agents[1]
+    i = 1
+
+    current = agents[i]
+    ancestors = agents[0:i] + agents[i+1:]
+
+    print(current)
+
+    # Unobserve all the observed points of the current robot
+    current.unobserve_true_points([current.x_seen])
 
     gpcf_adapter = GPCF(ancestors, current)
 

@@ -76,6 +76,11 @@ class GaussianProcess:
         k = self.k_vec(x, x_seen)
         mu_new = self.mu_0(x) + np.transpose(k) @ np.linalg.inv(
             K + self.sampling_noise * np.identity(n=np.shape(K)[0])) @ (y_seen - self.mu_0(x_seen))
+        # print(f"x_seen: {x_seen}")
+        # print(f"K: {K}")
+        # print(f"k: {k}")
+        # print(f"mu_0: {self.mu_0}")
+        # print(f"mu_new: {mu_new}")
         return mu_new
 
     def var_new(self, x, x_seen):

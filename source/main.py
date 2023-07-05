@@ -31,17 +31,18 @@ agents = [
 ]
 
 # ANCESTORS OBSERVE POINTS TO ADAPT
-agents[0].observe_true_points([1.6, 7.85])
-agents[1].observe_true_points([0.75, 1.6, 2.5, 7.25, 7.6, 7.85, 8.15, 8.5])
-agents[2].observe_true_points([1.6, 7.85])
+# agents[0].observe_true_points([1.6, 7.85])
+# agents[1].observe_true_points([0.75, 1.6, 2.5, 7.25, 7.6, 7.85, 8.15, 8.5])
+# agents[2].observe_true_points([1.6, 7.85])
 agents[3].observe_true_points([1, 1.6, 2.25, 7.2, 7.85, 8.55])
 agents[4].observe_true_points([1.15, 1.6, 7.85])
 agents[5].observe_true_points([1.6])
 
 # LAUNCH THE EXPERIMENTS
 visualiser = Visualiser()
-# visualiser.visualise_ITE_experiment(agents[5], alpha=0.9)
-visualiser.visualise_example_experiment(agents[:])
+# visualiser.visualise_ITE_experiment(agents[2], alpha=0.9)
+# visualiser.visualise_example_experiment(agents[:])
+visualiser.visualise_gpcf(agents[:3])
 
 # TODO: in any collaborative setting with multiple curves being plotted, you need to pass in as options which curves
 #  are being plotted. For example, it is unnecssary in the collaborative setting to plot the true function, or the
