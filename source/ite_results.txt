@@ -1,6 +1,0 @@
-Intact ancestor: 1.6, 7.85
-One leg missing ancestor: 0.75, 1.6, 2.5, 7.25, 7.6, 7.85, 8.15, 8.5
-Other leg missing ancestor: 1.6, 7.85
-Ancestor on gravel: 1, 1.6, 2.25, 7.2, 7.85, 8.55
-Ancestor on ice: 1.15, 1.6, 7.85
-# Ancestor with true function = simulation function: 1.6

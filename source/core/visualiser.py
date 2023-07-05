@@ -135,7 +135,7 @@ class Visualiser:
 
             return fig
 
-        app.run(port=8000)
+        app.run(port=8001)
 
     def visualise_gpcf_plotly(self, gps_arr):
         # Based on last part of tutorial: https://www.youtube.com/watch?v=pNMWbY0AUJ0&t=1531s
@@ -183,7 +183,7 @@ class Visualiser:
 
             return fig
 
-        app.run(port=8000)
+        app.run(port=8002)
 
     def _plot_end_cond_thresh(self, fig, gp):
         thresh = np.repeat(a=gp.calculate_end_cond_thresh_val(), repeats=len(gp.x_problem))

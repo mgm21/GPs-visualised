@@ -1,4 +1,4 @@
-from source.gaussian_process import GaussianProcess
+from source.core.gaussian_process import GaussianProcess
 import numpy as np
 
 agents = [
