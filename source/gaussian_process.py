@@ -43,8 +43,8 @@ class GaussianProcess:
         self.y_seen = np.delete(self.y_seen, index)
 
     def query_acquisition_function(self):
-        gp_mean = self.mu_new(self.x_problem, self.x_seen, self.y_seen)
-        gp_var = self.var_new(self.x_problem, self.x_seen)
+        gp_mean = self.mu_new(self.x_problem)
+        gp_var = self.var_new(self.x_problem)
 
         max_val_index = np.argmax(gp_mean + [i * self.kappa for i in gp_var])
         max_val_x_loc = (self.x_stop - self.x_start) * (max_val_index + 1) / self.num_points
@@ -57,34 +57,34 @@ class GaussianProcess:
         else:
             self.observe_true_points(x_clicked)
 
-    def mu_new(self, x, x_seen, y_seen):
-        K = self.K_mat(x_seen)
-        k = self._k_vec(x, x_seen)
+    def mu_new(self, x):
+        K = self.K_mat()
+        k = self._k_vec(x)
         mu_new = self.mu_0(x) + np.transpose(k) @ np.linalg.inv(
-            K + self.sampling_noise * np.identity(n=np.shape(K)[0])) @ (y_seen - self.mu_0(x_seen))
+            K + self.sampling_noise * np.identity(n=np.shape(K)[0])) @ (self.y_seen - self.mu_0(self.x_seen))
         return mu_new
 
-    def var_new(self, x, x_seen):
-        K_computed = self.K_mat(x_seen)
+    def var_new(self, x):
+        K_computed = self.K_mat()
         var = []
         for i in range(len(x)):
             var += [self._kernel_func(x[i], x[i]) + self.sampling_noise - np.transpose(
-                self._k_vec(x[i], x_seen)) @ np.linalg.inv(
-                K_computed + self.sampling_noise * np.identity(n=np.shape(K_computed)[0])) @ self._k_vec(x[i], x_seen)]
+                self._k_vec(x[i])) @ np.linalg.inv(
+                K_computed + self.sampling_noise * np.identity(n=np.shape(K_computed)[0])) @ self._k_vec(x[i])]
         return var
 
     def calculate_end_cond_thresh_val(self):
-        thresh = self.alpha * np.max(self.mu_new(self.x_problem, self.x_seen, self.y_seen))
+        thresh = self.alpha * np.max(self.mu_new(self.x_problem))
         return thresh
 
-    def K_mat(self, x_seen):
-        n = len(x_seen)
+    def K_mat(self):
+        n = len(self.x_seen)
         mat = np.zeros(shape=(n, n))
 
         for i in range(n):
             for j in range(i, n):
                 # Make use of symmetry to halve the computation of the Kernel matrix
-                mat[i, j] = self._kernel_func(x_seen[i], x_seen[j])
+                mat[i, j] = self._kernel_func(self.x_seen[i], self.x_seen[j])
                 mat[j, i] = mat[i, j]
         return mat
 
@@ -101,8 +101,8 @@ class GaussianProcess:
         else:
             print("I'm sorry I do not recognise this kernel. Try: squared_exponential or matern")
 
-    def _k_vec(self, x, x_seen):
-        return [self._kernel_func(x, xi) for xi in x_seen]
+    def _k_vec(self, x):
+        return [self._kernel_func(x, xi) for xi in self.x_seen]
 
 
 if __name__ == "__main__":
@@ -114,9 +114,3 @@ if __name__ == "__main__":
     print(gp2.calculate_end_cond_thresh_val())
     gp2.observe_true_points([1.6])
     print(gp2.calculate_end_cond_thresh_val())
-
-# Todo: include an animation component whereby the optimisation can be done automatically wiht a sleep call
-#  in between re-plotting.
-
-# Todo: best thing for now is to keep because it does not hurt anything else than readability; meaning, develop
-#  the code further to know if it was required or not and then can remove once an MVP of the complete code is done.

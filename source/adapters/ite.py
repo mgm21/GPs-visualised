@@ -19,9 +19,7 @@ class ITE:
 
     def adaptation_is_done(self):
         alpha = 0.9  # temporary line before I figure out where to put the threshold calculation
-        end_cond_thresh = alpha * np.max(self.gp.mu_new(self.gp.x_problem,
-                                                        self.gp.x_seen,
-                                                        self.gp.y_seen))
+        end_cond_thresh = alpha * np.max(self.gp.mu_new(self.gp.x_problem))
         return self.counter >= self.max_num_steps or np.any(self.gp.y_seen > end_cond_thresh)
 
 

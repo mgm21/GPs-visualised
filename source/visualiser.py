@@ -29,8 +29,8 @@ class Visualiser:
         for i, gp in enumerate(gps_arr):
             # Compute/Define the required arrays once
             gp.plot_col = self.plot_cols[i]
-            mu_new = gp.mu_new(gp.x_problem, gp.x_seen, gp.y_seen)
-            var_new = gp.var_new(gp.x_problem, gp.x_seen)
+            mu_new = gp.mu_new(gp.x_problem)
+            var_new = gp.var_new(gp.x_problem)
             xplot = gp.x_problem
             y_upper = mu_new + var_new
             y_lower = mu_new - var_new
@@ -69,7 +69,7 @@ class Visualiser:
 
             # Acquisition function suggestion
             fig.add_scatter(x=acquisition_x_suggestion,
-                            y=gp.mu_new(acquisition_x_suggestion, gp.x_seen, gp.y_seen),
+                            y=gp.mu_new(acquisition_x_suggestion),
                             marker=dict(color="black", size=10, symbol="cross"),
                             mode="markers",
                             opacity=0.5,
@@ -113,7 +113,7 @@ class Visualiser:
 
     def add_ITE_threshold_to_fig(self, fig, gp, alpha):
         # TODO: move the threshold_val calculation to the GaussianProcess class.
-        threshold_val = np.repeat(a=alpha * np.max(gp.mu_new(gp.x_problem, gp.x_seen, gp.y_seen)),
+        threshold_val = np.repeat(a=alpha * np.max(gp.mu_new(gp.x_problem)),
                                   repeats=len(gp.x_problem))
         fig.add_scatter(x=gp.x_problem,
                         y=threshold_val,
@@ -183,11 +183,11 @@ class Visualiser:
                      zorder=1)
 
             # Plot the updated GP mean and uncertainty
-            plt.plot(xplot, gp.mu_new(xplot, gp.x_seen, gp.y_seen), color=gp.plot_col, label=f"{i}: GP mean", zorder=1)
+            plt.plot(xplot, gp.mu_new(xplot), color=gp.plot_col, label=f"{i}: GP mean", zorder=1)
             # noinspection PyTypeChecker
             plt.fill_between(xplot,
-                             gp.mu_new(xplot, gp.x_seen, gp.y_seen) - gp.var_new(xplot, gp.x_seen),
-                             gp.mu_new(xplot, gp.x_seen, gp.y_seen) + gp.var_new(xplot, gp.x_seen),
+                             gp.mu_new(xplot) - gp.var_new(xplot),
+                             gp.mu_new(xplot) + gp.var_new(xplot),
                              color=gp.plot_col,
                              alpha=0.4)
 
@@ -299,3 +299,6 @@ class Visualiser:
 # TODO: change the current visualise_ite to having a continue button where it just goes through with the steps until
 #  termination (and also check why the behaviour explodes after continuing the algorithm too long: singular matrix issue
 #  should I be adding a check for singular matrix so the determinant is not taken?)
+
+# Todo: include an animation component whereby the optimisation can be done automatically wiht a sleep call
+#  in between re-plotting.

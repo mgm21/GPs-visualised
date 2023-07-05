@@ -39,7 +39,7 @@ class GPCF:
 
     def get_past_gp_mu_vals(self, x):
         # There are as many mu_vals as there are past/ancestor gaussian processes
-        mu_vals = np.array([gp.mu_new(x, gp.x_seen, gp.y_seen) for gp in self.past_gp_arr])
+        mu_vals = np.array([gp.mu_new(x) for gp in self.past_gp_arr])
         return mu_vals
 
     def negative_loglikelihood(self, W):
@@ -47,15 +47,13 @@ class GPCF:
         # TODO: check all the types here (arrays, shapes for matrix multiplications, etc...)
         # TODO: Is it acceptable that this function crashes when current GP has not seen any points?
         A = self.current_gp.y_seen - self.get_past_gp_mu_vals(self.current_gp.x_seen).T @ W
-        K = self.current_gp.K_mat(self.current_gp.x_seen)
+        K = self.current_gp.K_mat()
         t = len(self.current_gp.y_seen)
         return -(-0.5 * A.T @ np.linalg.inv(K) @ A - 0.5 * np.log(np.linalg.det(K)) - (t / 2) * np.log(2 * np.pi))
 
     def adaptation_is_done(self):
         alpha = 0.9  # temporary line before I figure out where to put the threshold calculation
-        end_cond_thresh = alpha * np.max(self.current_gp.mu_new(self.current_gp.x_problem,
-                                                                self.current_gp.x_seen,
-                                                                self.current_gp.y_seen))
+        end_cond_thresh = alpha * np.max(self.current_gp.mu_new(self.current_gp.x_problem))
         return self.counter >= self.max_num_steps or np.any(self.current_gp.y_seen > end_cond_thresh)
 
 
