@@ -8,6 +8,7 @@ import ipywidgets
 from dash import Dash, dcc, html, Output, Input, State, callback
 import plotly.express as px
 from adapters.gpcf import GPCF
+from adapters.ite import ITE
 
 
 class Visualiser:
@@ -248,6 +249,43 @@ class Visualiser:
 
         app.run(port=8000)
 
+    def visualise_ite(self, gp):
+        # Based on last part of tutorial: https://www.youtube.com/watch?v=pNMWbY0AUJ0&t=1531s
+        initial_fig = self.generate_plotly_figure([gp])
+
+        ite = ITE(gp)
+
+        app = Dash(__name__)
+
+        app.layout = html.Div(
+            dcc.Graph(figure=initial_fig, id='gp-graph', style={"height": "100vh"})
+        )
+
+        @callback(
+            Output(component_id='gp-graph', component_property='figure'),
+            Input(component_id='gp-graph', component_property='clickData'),
+            prevent_initial_call=True
+        )
+        def update_plot(point_clicked):  # the function argument comes from the component property of the Input
+            x = point_clicked['points'][0]['x']
+
+            # index_clicked_curve = point_clicked['points'][0]['curveNumber']
+            # gp_index = index_clicked_curve // self.num_plotly_objects_per_gp
+
+            ite.take_adaptation_step()
+
+            # # different line than visualise example experiment
+            # gpcf.update_current_gp_mu_0()
+
+            fig = self.generate_plotly_figure([gp])
+
+            print(point_clicked)
+            print(type(point_clicked))
+            print(x)
+
+            return fig
+
+        app.run(port=8000)
 
 
 # TODO: add a play button to do the whole adaptation process for you without having to click etc... and this is where
@@ -257,3 +295,7 @@ class Visualiser:
 #  toggle because the whole plot is being replotted every time. So one of three things can be done: EITHER learn how
 #  to just replot the curve not to replot the whole figure. OR learn to record the settings and keep them for the
 #  next plotting cycle. OR pass in as arguments the things that you want legended (undesirable).
+
+# TODO: change the current visualise_ite to having a continue button where it just goes through with the steps until
+#  termination (and also check why the behaviour explodes after continuing the algorithm too long: singular matrix issue
+#  should I be adding a check for singular matrix so the determinant is not taken?)
