@@ -35,7 +35,7 @@ class GPCF:
         self.W = optim_result.x
         # Normalise weights
         self.W = self.W / sum(np.abs(self.W))
-        print(self.W)
+        print(f"weights: {self.W}")
 
     def get_past_gp_mu_vals(self, x):
         # There are as many mu_vals as there are past/ancestor gaussian processes
@@ -56,7 +56,7 @@ class GPCF:
         end_cond_thresh = alpha * np.max(self.current_gp.mu_new(self.current_gp.x_problem,
                                                                 self.current_gp.x_seen,
                                                                 self.current_gp.y_seen))
-        return self.counter >= self.max_num_steps or np.any(self.current_gp.y_seen) > end_cond_thresh
+        return self.counter >= self.max_num_steps or np.any(self.current_gp.y_seen > end_cond_thresh)
 
 
 if __name__ == "__main__":
