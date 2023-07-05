@@ -33,8 +33,10 @@ class GaussianProcess:
 
     def observe_true_points(self, x):
         x = np.array(x)
-        self.x_seen = np.append(self.x_seen, x)
-        self.y_seen = np.append(self.y_seen, self.true_func(x))
+        # In order not to get a singular matrix error, it is important for x_seen to be unique
+        # I have added the following logic not to add duplicates; can be made more efficient if needed.
+        self.x_seen = np.unique(np.append(self.x_seen, x))
+        self.y_seen = self.true_func(self.x_seen)
 
     def unobserve_true_points(self, x):
         x = np.array(x)

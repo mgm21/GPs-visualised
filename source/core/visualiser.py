@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import plotly.graph_objects as go
 from dash import Dash, dcc, html, Output, Input, State, callback
-from adapters.gpcf import GPCF
+from source.adapters.gpcf import GPCF
 import plotly.express as px
 import pandas as pd
 import ipywidgets
