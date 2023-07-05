@@ -114,3 +114,5 @@ if __name__ == "__main__":
     print(gp2.calculate_end_cond_thresh_val())
     gp2.observe_true_points([1.6])
     print(gp2.calculate_end_cond_thresh_val())
+
+# Todo: check when numpy arrays are used vs lists and stay consistent. Try to only ever use numpy arrays.

@@ -13,7 +13,8 @@ from adapters.ite import ITE
 
 class Visualiser:
     def __init__(self):
-        self.plot_cols = ["cornflowerblue", "tan", "seagreen", "mediumorchid", "silver", "salmon", ]
+        # Library-agnostic parameters
+        self.plot_cols = ["cornflowerblue", "tan", "seagreen", "mediumorchid", "silver", "salmon"]
 
         # Plotly-specific
         self.num_plotly_objects_per_gp = 5
@@ -21,8 +22,183 @@ class Visualiser:
         # Matplotlib-specific
         self.show_axes_ticks_labels = True
 
-    def generate_plotly_figure(self, gps_arr):
+    def plot_gps_matplotlib(self, gps_arr, savefig=True):
+        plt.figure()
 
+        for i, gp in enumerate(gps_arr):
+
+            gp.plot_col = self.plot_cols[i]
+
+            xplot = gp.x_problem
+
+            # Plot the true, hidden, function
+            plt.plot(xplot, gp.true_func(xplot), color=gp.plot_col, linestyle="--", label=f"{i}: True function",
+                     zorder=1)
+
+            # Plot the updated GP mean
+            plt.plot(xplot, gp.mu_new(xplot), color=gp.plot_col, label=f"{i}: GP mean", zorder=1)
+
+            # Plot the uncertainty bands
+            plt.fill_between(xplot,
+                             gp.mu_new(xplot) - gp.var_new(xplot),
+                             gp.mu_new(xplot) + gp.var_new(xplot),
+                             color=gp.plot_col,
+                             alpha=0.4)
+
+            # Plot the seen points
+            plt.scatter(gp.x_seen, gp.true_func(gp.x_seen), color="black", marker=".", label=f"{i}: Observed points",
+                        zorder=2, linewidths=1, s=40,
+                        alpha=0.4)
+
+            plt.legend()
+
+            # Edit plot layout
+            if self.show_axes_ticks_labels:
+                plt.tick_params(left=False, right=False, labelleft=False,
+                                labelbottom=False, bottom=False)
+
+        if savefig:
+            plt.savefig("example-sin", dpi=20)
+
+        plt.show()
+
+    def visualise_gps_plotly(self, gps_arr):
+        # Based on last part of tutorial: https://www.youtube.com/watch?v=pNMWbY0AUJ0&t=1531s
+        initial_fig = self._generate_plotly_figure(gps_arr)
+
+        app = Dash(__name__)
+
+        app.layout = html.Div(
+            dcc.Graph(figure=initial_fig, id='gp-graph', style={"height": "100vh"})
+        )
+
+        @callback(
+            Output(component_id='gp-graph', component_property='figure'),
+            Input(component_id='gp-graph', component_property='clickData'),
+            prevent_initial_call=True
+        )
+        def update_plot(point_clicked):  # the function argument comes from the component property of the Input
+            x = point_clicked['points'][0]['x']
+
+            index_clicked_curve = point_clicked['points'][0]['curveNumber']
+            gp_index = index_clicked_curve // self.num_plotly_objects_per_gp
+            print(index_clicked_curve)
+            print(gp_index)
+
+            gps_arr[gp_index].update_gp(x_clicked=x)
+            fig = self._generate_plotly_figure(gps_arr)
+
+            print(point_clicked)
+            print(type(point_clicked))
+            print(x)
+
+            return fig
+
+        app.run(port=8000)
+
+    def visualise_ite_plotly(self, gp):
+        initial_fig = self._generate_plotly_figure([gp])
+        initial_fig = self._plot_end_cond_thresh(initial_fig, gp)
+        initial_fig.update_layout(
+            title=dict(text="ITE Algorithm", font=dict(size=50), automargin=False, yref='paper'),
+            title_x=0.5
+        )
+
+        app = Dash(__name__)
+
+        app.layout = html.Div(
+            dcc.Graph(figure=initial_fig, id='gp-graph', style={"height": "100vh"})
+        )
+
+        @callback(
+            Output(component_id='gp-graph', component_property='figure'),
+            Input(component_id='gp-graph', component_property='clickData'),
+            prevent_initial_call=True
+        )
+        def update_plot(point_clicked):  # the function argument comes from the component property of the Input
+            x = point_clicked['points'][0]['x']
+
+            index_clicked_curve = point_clicked['points'][0]['curveNumber']
+            gp_index = index_clicked_curve // self.num_plotly_objects_per_gp
+
+            # print(index_clicked_curve)
+            # print(gp_index)
+
+            gp.update_gp(x_clicked=x)
+            fig = self._generate_plotly_figure([gp])
+            fig = self._plot_end_cond_thresh(fig, gp)
+            fig.update_layout(
+                title=dict(text="ITE Algorithm", font=dict(size=50), automargin=False, yref='paper'),
+                title_x=0.5
+            )
+
+            # print(point_clicked)
+            # print(type(point_clicked))
+            # print(x)
+
+            return fig
+
+        app.run(port=8000)
+
+    def visualise_gpcf_plotly(self, gps_arr):
+        # Based on last part of tutorial: https://www.youtube.com/watch?v=pNMWbY0AUJ0&t=1531s
+        initial_fig = self._generate_plotly_figure(gps_arr)
+        initial_fig.update_layout(
+            title=dict(text="GPCF Algorithm", font=dict(size=50), automargin=False, yref='paper'),
+            title_x=0.5
+        )
+
+        # different line than visualise example experiment
+        # Initialise GPCF adapter
+        gpcf = GPCF(gps_arr[:-1], gps_arr[-1])
+
+        app = Dash(__name__)
+
+        app.layout = html.Div(
+            dcc.Graph(figure=initial_fig, id='gp-graph', style={"height": "100vh"})
+        )
+
+        @callback(
+            Output(component_id='gp-graph', component_property='figure'),
+            Input(component_id='gp-graph', component_property='clickData'),
+            prevent_initial_call=True
+        )
+        def update_plot(point_clicked):  # the function argument comes from the component property of the Input
+            x = point_clicked['points'][0]['x']
+
+            index_clicked_curve = point_clicked['points'][0]['curveNumber']
+            gp_index = index_clicked_curve // self.num_plotly_objects_per_gp
+
+            gps_arr[gp_index].update_gp(x_clicked=x)
+
+            # different line than visualise example experiment
+            gpcf.update_current_gp_mu_0()
+
+            fig = self._generate_plotly_figure(gps_arr)
+            initial_fig.update_layout(
+                title=dict(text="GPCF Algorithm", font=dict(size=50), automargin=False, yref='paper'),
+                title_x=0.5
+            )
+
+            print(point_clicked)
+            print(type(point_clicked))
+            print(x)
+
+            return fig
+
+        app.run(port=8000)
+
+    def _plot_end_cond_thresh(self, fig, gp):
+        thresh = np.repeat(a=gp.calculate_end_cond_thresh_val(), repeats=len(gp.x_problem))
+
+        fig.add_scatter(x=gp.x_problem,
+                        y=thresh,
+                        line=dict(color="red", dash='dash', width=4),
+                        name=f"End condition")
+
+        return fig
+
+    def _generate_plotly_figure(self, gps_arr):
         # Initialise the overall Plotly figure
         fig = go.FigureWidget()
 
@@ -77,228 +253,13 @@ class Visualiser:
 
         return fig
 
-    def visualise_example_experiment(self, gps_arr):
-        # Based on last part of tutorial: https://www.youtube.com/watch?v=pNMWbY0AUJ0&t=1531s
-        initial_fig = self.generate_plotly_figure(gps_arr)
+# BACKLOG
 
-        app = Dash(__name__)
+# Todo: check how to update the plots vs re-plotting them at each click
 
-        app.layout = html.Div(
-            dcc.Graph(figure=initial_fig, id='gp-graph', style={"height": "100vh"})
-        )
+# Todo: I rarely (irreproducibly) got singular matrix error when following through with what the acquisition wanted,
+#  this led to very spiky uncertainty bands. Should I check whether the matrix is singular?
 
-        @callback(
-            Output(component_id='gp-graph', component_property='figure'),
-            Input(component_id='gp-graph', component_property='clickData'),
-            prevent_initial_call=True
-        )
-        def update_plot(point_clicked):  # the function argument comes from the component property of the Input
-            x = point_clicked['points'][0]['x']
-
-            index_clicked_curve = point_clicked['points'][0]['curveNumber']
-            gp_index = index_clicked_curve // self.num_plotly_objects_per_gp
-            print(index_clicked_curve)
-            print(gp_index)
-
-            gps_arr[gp_index].update_gp(x_clicked=x)
-            fig = self.generate_plotly_figure(gps_arr)
-
-            print(point_clicked)
-            print(type(point_clicked))
-            print(x)
-
-            return fig
-
-        app.run(port=8000)
-
-    def add_ITE_threshold_to_fig(self, fig, gp, alpha):
-        # TODO: move the threshold_val calculation to the GaussianProcess class.
-        threshold_val = np.repeat(a=alpha * np.max(gp.mu_new(gp.x_problem)),
-                                  repeats=len(gp.x_problem))
-        fig.add_scatter(x=gp.x_problem,
-                        y=threshold_val,
-                        line=dict(color="red", dash='dash', width=4),
-                        name=f"End condition")
-
-        return fig
-
-    def visualise_ITE_experiment(self, gp, alpha):
-        initial_fig = self.generate_plotly_figure([gp])
-        # TODO: make the following into a function to not repeat the code below
-
-        initial_fig = self.add_ITE_threshold_to_fig(initial_fig, gp, alpha)
-        initial_fig.update_layout(
-            title=dict(text="ITE Experiment", font=dict(size=50), automargin=False, yref='paper'),
-            title_x=0.5
-        )
-
-        app = Dash(__name__)
-
-        app.layout = html.Div(
-            dcc.Graph(figure=initial_fig, id='gp-graph', style={"height": "100vh"})
-        )
-
-        @callback(
-            Output(component_id='gp-graph', component_property='figure'),
-            Input(component_id='gp-graph', component_property='clickData'),
-            prevent_initial_call=True
-        )
-        def update_plot(point_clicked):  # the function argument comes from the component property of the Input
-            x = point_clicked['points'][0]['x']
-
-            index_clicked_curve = point_clicked['points'][0]['curveNumber']
-            gp_index = index_clicked_curve // self.num_plotly_objects_per_gp
-
-            # print(index_clicked_curve)
-            # print(gp_index)
-
-            gp.update_gp(x_clicked=x)
-            fig = self.generate_plotly_figure([gp])
-            fig = self.add_ITE_threshold_to_fig(fig, gp, alpha)
-            fig.update_layout(
-                title=dict(text="ITE Experiment", font=dict(size=50), automargin=False, yref='paper'),
-                title_x=0.5
-            )
-
-            # print(point_clicked)
-            # print(type(point_clicked))
-            # print(x)
-
-            return fig
-
-        app.run(port=8000)
-
-    def plot_gps_matplotlib(self, gps_arr, savefig=True):
-        # Set up the plotting environment
-        plt.figure()
-
-        for i, gp in enumerate(gps_arr):
-
-            gp.plot_col = self.plot_cols[i]
-
-            xplot = gp.x_problem
-
-            # Plot the true, hidden, function
-            plt.plot(xplot, gp.true_func(xplot), color=gp.plot_col, linestyle="--", label=f"{i}: True function",
-                     zorder=1)
-
-            # Plot the updated GP mean and uncertainty
-            plt.plot(xplot, gp.mu_new(xplot), color=gp.plot_col, label=f"{i}: GP mean", zorder=1)
-            # noinspection PyTypeChecker
-            plt.fill_between(xplot,
-                             gp.mu_new(xplot) - gp.var_new(xplot),
-                             gp.mu_new(xplot) + gp.var_new(xplot),
-                             color=gp.plot_col,
-                             alpha=0.4)
-
-            # Plot the "seen" points
-            plt.scatter(gp.x_seen, gp.true_func(gp.x_seen), color="black", marker=".", label=f"{i}: Observed points",
-                        zorder=2, linewidths=1, s=40,
-                        alpha=0.4)
-
-            plt.legend()
-
-            # Edit plot layout
-            if self.show_axes_ticks_labels:
-                plt.tick_params(left=False, right=False, labelleft=False,
-                                labelbottom=False, bottom=False)
-
-        if savefig:
-            plt.savefig("example-sin", dpi=20)
-
-        plt.show()
-
-
-    def visualise_gpcf(self, gps_arr):
-        # Based on last part of tutorial: https://www.youtube.com/watch?v=pNMWbY0AUJ0&t=1531s
-        initial_fig = self.generate_plotly_figure(gps_arr)
-
-        # different line than visualise example experiment
-        # Initialise GPCF adapter
-        gpcf = GPCF(gps_arr[:-1], gps_arr[-1])
-
-        app = Dash(__name__)
-
-        app.layout = html.Div(
-            dcc.Graph(figure=initial_fig, id='gp-graph', style={"height": "100vh"})
-        )
-
-        @callback(
-            Output(component_id='gp-graph', component_property='figure'),
-            Input(component_id='gp-graph', component_property='clickData'),
-            prevent_initial_call=True
-        )
-        def update_plot(point_clicked):  # the function argument comes from the component property of the Input
-            x = point_clicked['points'][0]['x']
-
-            index_clicked_curve = point_clicked['points'][0]['curveNumber']
-            gp_index = index_clicked_curve // self.num_plotly_objects_per_gp
-
-            gps_arr[gp_index].update_gp(x_clicked=x)
-
-            # different line than visualise example experiment
-            gpcf.update_current_gp_mu_0()
-
-            fig = self.generate_plotly_figure(gps_arr)
-
-            print(point_clicked)
-            print(type(point_clicked))
-            print(x)
-
-            return fig
-
-        app.run(port=8000)
-
-    def visualise_ite(self, gp):
-        # Based on last part of tutorial: https://www.youtube.com/watch?v=pNMWbY0AUJ0&t=1531s
-        initial_fig = self.generate_plotly_figure([gp])
-
-        ite = ITE(gp)
-
-        app = Dash(__name__)
-
-        app.layout = html.Div(
-            dcc.Graph(figure=initial_fig, id='gp-graph', style={"height": "100vh"})
-        )
-
-        @callback(
-            Output(component_id='gp-graph', component_property='figure'),
-            Input(component_id='gp-graph', component_property='clickData'),
-            prevent_initial_call=True
-        )
-        def update_plot(point_clicked):  # the function argument comes from the component property of the Input
-            x = point_clicked['points'][0]['x']
-
-            # index_clicked_curve = point_clicked['points'][0]['curveNumber']
-            # gp_index = index_clicked_curve // self.num_plotly_objects_per_gp
-
-            ite.take_adaptation_step()
-
-            # # different line than visualise example experiment
-            # gpcf.update_current_gp_mu_0()
-
-            fig = self.generate_plotly_figure([gp])
-
-            print(point_clicked)
-            print(type(point_clicked))
-            print(x)
-
-            return fig
-
-        app.run(port=8000)
-
-
-# TODO: add a play button to do the whole adaptation process for you without having to click etc... and this is where
-#  the sleep(1) will come in handy.
-
-# TODO: check how to make it that the legend elements do not toggle each time the plot updates... actually they
-#  toggle because the whole plot is being replotted every time. So one of three things can be done: EITHER learn how
-#  to just replot the curve not to replot the whole figure. OR learn to record the settings and keep them for the
-#  next plotting cycle. OR pass in as arguments the things that you want legended (undesirable).
-
-# TODO: change the current visualise_ite to having a continue button where it just goes through with the steps until
-#  termination (and also check why the behaviour explodes after continuing the algorithm too long: singular matrix issue
-#  should I be adding a check for singular matrix so the determinant is not taken?)
-
-# Todo: include an animation component whereby the optimisation can be done automatically wiht a sleep call
-#  in between re-plotting.
+# Todo: include an animation component whereby the optimisation can be done automatically with a sleep call in
+#  between re-plotting. add a play button to do the whole adaptation process for you without having to click etc...
+#  and this is where the sleep(1) will come in handy.
