@@ -42,8 +42,8 @@ agents[5].observe_true_points([1.6])
 visualiser = Visualiser()
 # visualiser.visualise_ITE_experiment(agents[1], alpha=0.9)
 # visualiser.visualise_example_experiment(agents[:])
-# visualiser.visualise_gpcf(agents[:3])
-visualiser.visualise_ite(agents[1])
+visualiser.visualise_gpcf(agents[:3])
+# visualiser.visualise_ite(agents[1])
 
 # TODO: in any collaborative setting with multiple curves being plotted, you need to pass in as options which curves
 #  are being plotted. For example, it is unnecssary in the collaborative setting to plot the true function, or the
