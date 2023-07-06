@@ -12,7 +12,7 @@ agents[i].kappa = 3
 
 # Launch the visualisation app
 visualiser = Visualiser()
-visualiser.plot_gps_matplotlib(agents[6:9], plot_elements=["mean"])
+visualiser.plot_gps_matplotlib(agents[9:], plot_elements=["mean", "var"])
 # visualiser.visualise_ite_plotly(agents[i])
 # visualiser.visualise_gpcf_plotly(agents[:3])
 

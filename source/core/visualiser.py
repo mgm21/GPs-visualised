@@ -11,7 +11,7 @@ import ipywidgets
 class Visualiser:
     def __init__(self):
         # Library-agnostic parameters
-        self.plot_cols = ["cornflowerblue", "tan", "seagreen", "mediumorchid", "silver", "salmon"]
+        self.plot_cols = ["cornflowerblue", "tan", "seagreen", "mediumorchid", "silver", "salmon", "blue", "green", "red"]
 
         # Plotly-specific
         self.num_plotly_objects_per_gp = 5
@@ -54,7 +54,7 @@ class Visualiser:
             plt.legend()
 
             # Edit plot layout
-            if self.show_axes_ticks_labels:
+            if not self.show_axes_ticks_labels:
                 plt.tick_params(left=False, right=False, labelleft=False,
                                 labelbottom=False, bottom=False)
 

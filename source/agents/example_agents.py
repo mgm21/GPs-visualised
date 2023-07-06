@@ -45,7 +45,24 @@ agents = [
     # 8 Ancestor whose BD is 90 deg phase shifted and is compressed
     GaussianProcess(true_func=lambda x: 0.5 * np.sin(x + np.pi),
                     mu_0=lambda x: np.sin(x),
-                    x_seen=[1.6, 7.85])
+                    x_seen=[1.6, 7.85]),
+
+    # 9 Ancestor with a single +ve peak in the middle
+    GaussianProcess(true_func=lambda x: np.sin(x*0.5),
+                    mu_0=lambda x: np.zeros(x.shape[0]),
+                    x_seen=[0, 3, 9]),
+
+    # 10 Ancestor with a single +ve peak at the right
+    GaussianProcess(true_func=lambda x: - (np.sin(x*0.5) - 0.5),
+                        mu_0=lambda x: np.zeros(x.shape[0]),
+                        x_seen=[3, 9]),
+
+    # 11 Ancestor with a single +ve peak in the middle with some compression compared to # 9
+    GaussianProcess(true_func=lambda x: (np.sin(x*0.5)) * 0.7,
+                            mu_0=lambda x: np.zeros(x.shape[0]),
+                            x_seen=[])
+
+
 
 ]
 
