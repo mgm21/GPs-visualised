@@ -33,7 +33,7 @@ class GPCF:
         optim_result = optimize.minimize(fun=self._get_negative_loglikelihood, x0=self.W)
         self.W = optim_result.x
         # Normalise weights
-        # TODO: should I be normalising the weights? Is this how it should be done? in [0, 1] or [-1, 1]?
+        # Todo: should I be normalising the weights? Is this how it should be done? in [0, 1] or [-1, 1]?
         self.W = self.W / sum(np.abs(self.W))
         print(f"weights: {self.W}")
 

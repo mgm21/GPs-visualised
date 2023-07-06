@@ -6,20 +6,25 @@ from agents.example_agents import agents
 # Unobserve the points from some GPs
 i = 8
 agents[i].unobserve_true_points(x=agents[i].x_seen)
-# Higher regard for uncertainty works better for toy problem
-# not to get stuck in local maxima
-agents[i].kappa = 3
+agents[i].kappa = 3  # Higher regard for uncertainty works better for toy problem
 
-# Launch the visualisation app
+# Initialise visualiser class
 visualiser = Visualiser()
-# visualiser.plot_gps_matplotlib(agents[9:], plot_elements=["mean", "var"])
-# visualiser.visualise_ite_plotly(agents[i], plot_elements=["mean", "true"])
-visualiser.visualise_gpcf_plotly(agents[9:])
 
-# Backlog:
+# Plot single static GP with all elements
+# visualiser.plot_gps_matplotlib(agents[9:10])
 
-# Todo: add more ancestors: multiple whose maxes are in the middle (offset the sine by a bit) AND multiple ones who have
-#  the same defect (left side down or right side down) so that it can learn well from ancestors.
+# Plot multiple static GPs with some plot elements removed
+# visualiser.plot_gps_matplotlib(agents[9:], plot_elements=["mean", "observed"])
 
-# Todo: try to understand why increasing the sampling noise makes the mean no longer go through the true function
-#  curve (is this normal?)
+# Start an interactive example app
+# visualiser.visualise_gps_plotly(agents[1:3], plot_elements=["mean", "var"])
+
+# Start an interactive ITE app (try i = 8 above)
+# visualiser.visualise_ite_plotly(agents[i])
+
+# Start an interactive GPCF app (try inputting agents[9:] and include "var" in plot_elements param)
+# visualiser.visualise_gpcf_plotly(agents[9:], plot_elements=["mean", "observed"])
+
+# Start an interactive inHERA app
+# visualiser.visualise_inhera_plotly(agents[9:], plot_elements=["mean", "observed"])

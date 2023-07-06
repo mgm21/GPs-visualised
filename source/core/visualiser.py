@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import plotly.graph_objects as go
 from dash import Dash, dcc, html, Output, Input, State, callback
 from source.adapters.gpcf import GPCF
+from source.adapters.inhera import InHERA
 import plotly.express as px
 import pandas as pd
 import ipywidgets
@@ -22,7 +23,7 @@ class Visualiser:
 
     def plot_gps_matplotlib(self,
                             gps_arr,
-                            savefig=True,
+                            savefig=False,
                             plot_elements=np.array(["true", "mean", "var", "observed", "acquisition"])):
         plt.figure()
 
@@ -64,13 +65,16 @@ class Visualiser:
                                 labelbottom=False, bottom=False)
 
         if savefig:
-            plt.savefig("example-sin", dpi=20)
+            plt.savefig("my-plot", dpi=500)
 
         plt.show()
 
     def visualise_gps_plotly(self,
                              gps_arr,
                              plot_elements=np.array(["true", "mean", "var", "observed", "acquisition"])):
+
+        self.num_plotly_objects_per_gp = len(plot_elements)
+
         # Based on last part of tutorial: https://www.youtube.com/watch?v=pNMWbY0AUJ0&t=1531s
         initial_fig = self._generate_plotly_figure(gps_arr, plot_elements)
 
@@ -93,7 +97,7 @@ class Visualiser:
             print(index_clicked_curve)
             print(gp_index)
 
-            gps_arr[gp_index].update_gp(x_clicked=x)
+            gps_arr[gp_index].update_gp(x=x)
             fig = self._generate_plotly_figure(gps_arr, plot_elements)
 
             print(point_clicked)
@@ -107,6 +111,10 @@ class Visualiser:
     def visualise_ite_plotly(self,
                              gp,
                              plot_elements=np.array(["true", "mean", "var", "observed", "acquisition"])):
+
+        self.num_plotly_objects_per_gp = len(plot_elements)
+
+
         initial_fig = self._generate_plotly_figure([gp], plot_elements)
         initial_fig = self._plot_end_cond_thresh(initial_fig, gp)
         initial_fig.update_layout(
@@ -134,7 +142,7 @@ class Visualiser:
             # print(index_clicked_curve)
             # print(gp_index)
 
-            gp.update_gp(x_clicked=x)
+            gp.update_gp(x=x)
             fig = self._generate_plotly_figure([gp], plot_elements)
             fig = self._plot_end_cond_thresh(fig, gp)
             fig.update_layout(
@@ -155,6 +163,9 @@ class Visualiser:
                               plot_elements=np.array(["mean", "observed"])):
 
         # Based on last part of tutorial: https://www.youtube.com/watch?v=pNMWbY0AUJ0&t=1531s
+
+        self.num_plotly_objects_per_gp = len(plot_elements)
+
 
         initial_fig = self._generate_plotly_figure(gps_arr, plot_elements)
 
@@ -184,14 +195,14 @@ class Visualiser:
             index_clicked_curve = point_clicked['points'][0]['curveNumber']
             gp_index = index_clicked_curve // self.num_plotly_objects_per_gp
 
-            gps_arr[gp_index].update_gp(x_clicked=x)
+            gps_arr[gp_index].update_gp(x=x)
 
             # different line than visualise example experiment
             gpcf.update_current_gp_mu_0()
 
             fig = self._generate_plotly_figure(gps_arr, plot_elements)
 
-            initial_fig.update_layout(
+            fig.update_layout(
                 title=dict(text="GPCF Algorithm", font=dict(size=50), automargin=False, yref='paper'),
                 title_x=0.5
             )
@@ -203,6 +214,63 @@ class Visualiser:
             return fig
 
         app.run(port=8002)
+
+    def visualise_inhera_plotly(self,
+                              gps_arr,
+                              plot_elements=np.array(["mean", "observed"])):
+
+        self.num_plotly_objects_per_gp = len(plot_elements)
+
+
+        # Based on last part of tutorial: https://www.youtube.com/watch?v=pNMWbY0AUJ0&t=1531s
+
+        initial_fig = self._generate_plotly_figure(gps_arr, plot_elements)
+
+        initial_fig.update_layout(
+            title=dict(text="inHERA Algorithm", font=dict(size=50), automargin=False, yref='paper'),
+            title_x=0.5
+        )
+
+        # different line than visualise example experiment
+        # Initialise adapter
+        inhera = InHERA(gps_arr[:-1], gps_arr[-1])
+
+        app = Dash(__name__)
+
+        app.layout = html.Div(
+            dcc.Graph(figure=initial_fig, id='gp-graph', style={"height": "100vh"})
+        )
+
+        @callback(
+            Output(component_id='gp-graph', component_property='figure'),
+            Input(component_id='gp-graph', component_property='clickData'),
+            prevent_initial_call=True
+        )
+        def update_plot(point_clicked):  # the function argument comes from the component property of the Input
+            x = point_clicked['points'][0]['x']
+
+            index_clicked_curve = point_clicked['points'][0]['curveNumber']
+            gp_index = index_clicked_curve // self.num_plotly_objects_per_gp
+
+            gps_arr[gp_index].update_gp(x=x)
+
+            # different line than visualise example experiment
+            inhera.update_current_gp_mu_0()
+
+            fig = self._generate_plotly_figure(gps_arr, plot_elements)
+
+            fig.update_layout(
+                title=dict(text="inHERA", font=dict(size=50), automargin=False, yref='paper'),
+                title_x=0.5
+            )
+
+            print(point_clicked)
+            print(type(point_clicked))
+            print(x)
+
+            return fig
+
+        app.run(port=8003)
 
     def _plot_end_cond_thresh(self,
                               fig,
@@ -218,8 +286,9 @@ class Visualiser:
 
     def _generate_plotly_figure(self,
                                 gps_arr,
-                                plot_elements,
-                                fig=go.FigureWidget()):
+                                plot_elements):
+
+        fig = go.FigureWidget()
 
         for i, gp in enumerate(gps_arr):
             # Compute/Define the required arrays once

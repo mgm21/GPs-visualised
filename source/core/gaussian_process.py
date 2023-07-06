@@ -53,11 +53,11 @@ class GaussianProcess:
 
         return max_val_x_loc
 
-    def update_gp(self, x_clicked):
-        if x_clicked in self.x_seen:
-            self.unobserve_true_points(x_clicked)
+    def update_gp(self, x):
+        if x in self.x_seen:
+            self.unobserve_true_points(x)
         else:
-            self.observe_true_points(x_clicked)
+            self.observe_true_points(x)
 
     def mu_new(self, x):
         K = self.K_mat()
@@ -117,4 +117,9 @@ if __name__ == "__main__":
     gp2.observe_true_points([1.6])
     print(gp2.calculate_end_cond_thresh_val())
 
+# Backlog:
+
 # Todo: check when numpy arrays are used vs lists and stay consistent. Try to only ever use numpy arrays.
+
+# Todo: try to understand why increasing the sampling noise makes the mean no longer go through the true function
+#  curve (is this normal?)
