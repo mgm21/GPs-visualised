@@ -19,7 +19,7 @@ class Visualiser:
         # Matplotlib-specific
         self.show_axes_ticks_labels = True
 
-    def plot_gps_matplotlib(self, gps_arr, savefig=True):
+    def plot_gps_matplotlib(self, gps_arr, savefig=True, plot_elements=["true", "mean", "var", "observed"]):
         plt.figure()
 
         for i, gp in enumerate(gps_arr):
@@ -28,24 +28,28 @@ class Visualiser:
 
             xplot = gp.x_problem
 
-            # Plot the true, hidden, function
-            plt.plot(xplot, gp.true_func(xplot), color=gp.plot_col, linestyle="--", label=f"{i}: True function",
-                     zorder=1)
+            if "true" in plot_elements:
+                # Plot the true, hidden, function
+                plt.plot(xplot, gp.true_func(xplot), color=gp.plot_col, linestyle="--", label=f"{i}: True function",
+                         zorder=1)
 
-            # Plot the updated GP mean
-            plt.plot(xplot, gp.mu_new(xplot), color=gp.plot_col, label=f"{i}: GP mean", zorder=1)
+            if "mean" in plot_elements:
+                # Plot the updated GP mean
+                plt.plot(xplot, gp.mu_new(xplot), color=gp.plot_col, label=f"{i}: GP mean", zorder=1)
 
-            # Plot the uncertainty bands
-            plt.fill_between(xplot,
-                             gp.mu_new(xplot) - gp.var_new(xplot),
-                             gp.mu_new(xplot) + gp.var_new(xplot),
-                             color=gp.plot_col,
-                             alpha=0.4)
+            if "var" in plot_elements:
+                # Plot the uncertainty bands
+                plt.fill_between(xplot,
+                                 gp.mu_new(xplot) - gp.var_new(xplot),
+                                 gp.mu_new(xplot) + gp.var_new(xplot),
+                                 color=gp.plot_col,
+                                 alpha=0.4)
 
-            # Plot the seen points
-            plt.scatter(gp.x_seen, gp.true_func(gp.x_seen), color="black", marker=".", label=f"{i}: Observed points",
-                        zorder=2, linewidths=1, s=40,
-                        alpha=0.4)
+            if "observed" in plot_elements:
+                # Plot the seen points
+                plt.scatter(gp.x_seen, gp.true_func(gp.x_seen), color="black", marker=".", label=f"{i}: Observed points",
+                            zorder=2, linewidths=1, s=40,
+                            alpha=0.4)
 
             plt.legend()
 
