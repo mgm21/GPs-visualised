@@ -3,61 +3,42 @@ import numpy as np
 
 class GaussianProcess:
     def __init__(self,
-                 sampling_noise=0.01,
+                 true_func=lambda x: np.sin(3 * x) + 2 * x,
+                 mu_0=lambda x: np.zeros(shape=x.shape[0]),
+                 x_seen=None,
+                 x_problem=np.linspace(start=0, stop=1, num=100),
+                 sampling_noise=0.001,
                  length_scale=1,
-                 vertical_scale=0.5,
                  kappa=0.05,
                  kernel="squared_exponential",
                  rho=0.4,
-                 alpha=0.9,
-                 true_func=lambda x: np.sin(3 * x) + 2 * x,
-                 mu_0=lambda x: np.zeros(shape=x.shape[0]),
-                 x_seen=np.array([])):
+                 alpha=0.9):
+
         # GP parameters
+        if x_seen is None:
+            x_seen = []
         self.sampling_noise = sampling_noise
-        self.vertical_scale = vertical_scale
         self.length_scale = length_scale
         self.kappa = kappa
         self.true_func = true_func
         self.mu_0 = mu_0
         self.kernel = kernel
         self.rho = rho
-
-        # Problem parameters
-        self.x_start, self.x_stop = 0, 10
-        self.num_points = 200
-        self.x_problem = np.linspace(start=self.x_start, stop=self.x_stop, num=self.num_points)
-        self.x_seen = np.array(x_seen)
-        self.y_seen = self.true_func(self.x_seen)
         self.alpha = alpha
 
-    def observe_true_points(self, x):
-        x = np.array(x)
-        # In order not to get a singular matrix error, it is important for x_seen to be unique
-        # I have added the following logic not to add duplicates; can be made more efficient if needed.
-        self.x_seen = np.unique(np.append(self.x_seen, x))
+        # Problem parameters
+        self.x_problem = x_problem
+        self.x_seen = np.array(x_seen)
         self.y_seen = self.true_func(self.x_seen)
-
-    def unobserve_true_points(self, x):
-        x = np.array(x)
-        index = np.where(self.x_seen == x)
-        self.x_seen = np.delete(self.x_seen, index)
-        self.y_seen = np.delete(self.y_seen, index)
 
     def query_acquisition_function(self):
         gp_mean = self.mu_new(self.x_problem)
         gp_var = self.var_new(self.x_problem)
 
         max_val_index = np.argmax(gp_mean + [i * self.kappa for i in gp_var])
-        max_val_x_loc = (self.x_stop - self.x_start) * (max_val_index + 1) / self.num_points
+        max_val_x_loc = (self.x_problem[-1] - self.x_problem[0]) * (max_val_index + 1) / len(self.x_problem)
 
         return max_val_x_loc
-
-    def update_gp(self, x):
-        if x in self.x_seen:
-            self.unobserve_true_points(x)
-        else:
-            self.observe_true_points(x)
 
     def mu_new(self, x):
         K = self.K_mat()
@@ -75,10 +56,6 @@ class GaussianProcess:
                 K_computed + self.sampling_noise * np.identity(n=np.shape(K_computed)[0])) @ self._k_vec(x[i])]
         return var
 
-    def calculate_end_cond_thresh_val(self):
-        thresh = self.alpha * np.max(self.mu_new(self.x_problem))
-        return thresh
-
     def K_mat(self):
         n = len(self.x_seen)
         mat = np.zeros(shape=(n, n))
@@ -95,7 +72,7 @@ class GaussianProcess:
             return np.exp(-0.5 * ((x2 - x1) / self.length_scale) ** 2)
 
         elif self.kernel == "matern":
-            # Note that the Euclidian distance were given as np.abs(x1-x2): defined for 1-D
+            # Note that the Euclidean distance were given as np.abs(x1-x2): defined for 1-D
             return (1 + ((np.sqrt(5) * np.abs(x1 - x2)) / self.rho) +
                     ((5 * np.abs(x1 - x2) ** 2) / (3 * self.rho ** 2))) * np.exp(
                 -((np.sqrt(5) * np.abs(x1 - x2)) / self.rho))
@@ -106,20 +83,42 @@ class GaussianProcess:
     def _k_vec(self, x):
         return [self._kernel_func(x, xi) for xi in self.x_seen]
 
+    # TODO: all the methods below could be removed. They are not necessarily the GP's responsibility.
+    def observe_true_points(self, x):
+        x = np.array(x)
+        # In order not to get a singular matrix error, it is important for x_seen to be unique
+        self.x_seen = np.unique(np.append(self.x_seen, x))
+        self.y_seen = self.true_func(self.x_seen)
+
+    def unobserve_true_points(self, x):
+        x = np.array(x)
+        index = np.where(self.x_seen == x)
+        self.x_seen = np.delete(self.x_seen, index)
+        self.y_seen = np.delete(self.y_seen, index)
+
+    def update_seen_point(self, x):
+        if x in self.x_seen:
+            self.unobserve_true_points(x)
+        else:
+            self.observe_true_points(x)
+
+    def calculate_end_cond_thresh_val(self):
+        thresh = self.alpha * np.max(self.mu_new(self.x_problem))
+        return thresh
+
 
 if __name__ == "__main__":
-    gp = GaussianProcess(x_seen=np.array([1, 2, 3]))
-    print(gp.x_seen)
-    print(gp.y_seen)
 
-    gp2 = GaussianProcess()
-    print(gp2.calculate_end_cond_thresh_val())
-    gp2.observe_true_points([1.6])
-    print(gp2.calculate_end_cond_thresh_val())
+    gp = GaussianProcess(true_func=np.sin,
+                         mu_0=np.cos,
+                         x_seen=[],
+                         x_problem=np.linspace(start=0, stop=10, num=20))
 
-# Backlog:
+    gp.observe_true_points(x=gp.query_acquisition_function())
 
-# Todo: check when numpy arrays are used vs lists and stay consistent. Try to only ever use numpy arrays.
 
-# Todo: try to understand why increasing the sampling noise makes the mean no longer go through the true function
-#  curve (is this normal?)
+
+
+
+
+
