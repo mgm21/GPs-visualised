@@ -4,6 +4,7 @@ import plotly.graph_objects as go
 from dash import Dash, dcc, html, Output, Input, State, callback
 from source.adapters.gpcf import GPCF
 from source.adapters.inhera import InHERA
+import scipy.stats as stats
 import plotly.express as px
 import pandas as pd
 import ipywidgets
@@ -20,6 +21,79 @@ class Visualiser:
 
         # Matplotlib-specific
         self.show_axes_ticks_labels = True
+
+    def update_gps_axes_matplotlib(self,
+                                   ax,
+                                   gps_arr,
+                                   plot_elements=np.array(["true", "mean", "var", "observed", "acquisition", "prior"]),
+                                   alpha=1,
+                                   color="cornflowerblue",
+                                   temp=None):
+
+
+        # color = next(ax._get_lines.prop_cycler)['color']
+
+        for i, gp in enumerate(gps_arr):
+
+            gp.plot_col = self.plot_cols[i]
+
+            xplot = gp.x_problem
+
+            print(len(xplot))
+
+            if "prior" in plot_elements:
+                temp2 = gp.mu_0(xplot)
+                temp2 = temp
+                ax.plot(xplot, temp2, linestyle="--", color="purple", label=f"GP prior", alpha=0.6)
+
+            if "mean" in plot_elements:
+                # Plot the updated GP mean
+                ax.plot(xplot, gp.mu_new(xplot), color=color, label=f"GP mean", zorder=1, alpha=alpha)
+
+            if "var" in plot_elements:
+                # Plot the uncertainty bands
+                ax.fill_between(xplot,
+                                 gp.mu_new(xplot) - 2 * np.sqrt(gp.var_new(xplot)),
+                                 gp.mu_new(xplot) + 2 * np.sqrt(gp.var_new(xplot)),
+                                 color=color,
+                                 alpha=0.4, label=f"GP mean ±2σ")
+
+            if "true" in plot_elements:
+                # Plot the true, hidden, function
+                ax.plot(xplot, gp.true_func(xplot), color="k", linestyle=":", label=f"True function",
+                         zorder=1)
+
+            if "observed" in plot_elements:
+                # Plot the seen points
+                ax.scatter(gp.x_seen, gp.true_func(gp.x_seen),
+                            color="k", marker="+", label=f"Observations",
+                            zorder=2, linewidths=1, s=80,
+                            alpha=0.8)
+
+            # ax.legend()
+
+            if "vertical_gaussian" in plot_elements:
+
+                for idx1 in range(0, len(xplot), 3):
+                    x1 = xplot[idx1]
+                    mu1 = gp.mu_new(xplot)[idx1]
+                    std1 = np.sqrt(gp.var_new(xplot)[idx1])
+                    yarr = np.linspace(-10, 10, 200)
+                    scale = 1
+
+                    if idx1 % 2 == 0:
+                         color = "k"
+                    else:
+                        color = "cornflowerblue"
+
+                    ax.plot(stats.norm.pdf(yarr, mu1, std1) * scale + x1, yarr, color=color)
+
+            print(gp.query_acquisition_function())
+
+            # Edit plot layout
+            if not self.show_axes_ticks_labels:
+                ax.tick_params(left=False, right=False, labelleft=False,
+                                labelbottom=False, bottom=False)
 
     def plot_gps_matplotlib(self,
                             gps_arr,
@@ -57,7 +131,10 @@ class Visualiser:
                             zorder=2, linewidths=1, s=40,
                             alpha=0.4)
 
+            plt.plot(xplot, gp.mu_0(xplot), linestyle=":", color=gp.plot_col, label=f"{i}: Prior mean")
+
             plt.legend()
+            plt.ylim(-5, 5)
 
             # Edit plot layout
             if not self.show_axes_ticks_labels:
@@ -65,9 +142,11 @@ class Visualiser:
                                 labelbottom=False, bottom=False)
 
         if savefig:
-            plt.savefig("my-plot", dpi=500)
+            plt.savefig("my-plot", dpi=600)
 
         plt.show()
+
+
 
     def visualise_gps_plotly(self,
                              gps_arr,
@@ -97,7 +176,7 @@ class Visualiser:
             print(index_clicked_curve)
             print(gp_index)
 
-            gps_arr[gp_index].update_gp(x=x)
+            gps_arr[gp_index].update_seen_point(x=x)
             fig = self._generate_plotly_figure(gps_arr, plot_elements)
 
             print(point_clicked)
@@ -142,7 +221,7 @@ class Visualiser:
             # print(index_clicked_curve)
             # print(gp_index)
 
-            gp.update_gp(x=x)
+            gp.update_seen_point(x=x)
             fig = self._generate_plotly_figure([gp], plot_elements)
             fig = self._plot_end_cond_thresh(fig, gp)
             fig.update_layout(
@@ -195,7 +274,7 @@ class Visualiser:
             index_clicked_curve = point_clicked['points'][0]['curveNumber']
             gp_index = index_clicked_curve // self.num_plotly_objects_per_gp
 
-            gps_arr[gp_index].update_gp(x=x)
+            gps_arr[gp_index].update_seen_point(x=x)
 
             # different line than visualise example experiment
             gpcf.update_current_gp_mu_0()
@@ -252,7 +331,7 @@ class Visualiser:
             index_clicked_curve = point_clicked['points'][0]['curveNumber']
             gp_index = index_clicked_curve // self.num_plotly_objects_per_gp
 
-            gps_arr[gp_index].update_gp(x=x)
+            gps_arr[gp_index].update_seen_point(x=x)
 
             # different line than visualise example experiment
             inhera.update_current_gp_mu_0()
