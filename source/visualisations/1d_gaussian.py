@@ -9,7 +9,7 @@ font = {'fontname': font_used}
 legend_font = fm.FontProperties(family=font_used)
 legend_font._size = font_size
 
-plt.style.use("seaborn")
+# plt.style.use("seaborn")
 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 10))
 yarr = np.linspace(-4, 4, 100)
 
