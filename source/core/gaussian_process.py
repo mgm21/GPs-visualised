@@ -6,10 +6,10 @@ class GaussianProcess:
                  true_func=lambda x: np.sin(3 * x) + 2 * x,
                  mu_0=lambda x: np.zeros(shape=x.shape[0]),
                  x_seen=None,
-                 x_problem=np.linspace(start=0, stop=1, num=100),
-                 sampling_noise=0.001,
-                 length_scale=1,
-                 kappa=0.05,
+                 x_problem=np.linspace(start=0, stop=10, num=100),
+                 sampling_noise=0.1,
+                 length_scale=1, # Previously 1.5
+                 kappa=4,
                  kernel="squared_exponential",
                  rho=0.4,
                  alpha=0.9):
@@ -108,17 +108,9 @@ class GaussianProcess:
 
 
 if __name__ == "__main__":
-
     gp = GaussianProcess(true_func=np.sin,
                          mu_0=np.cos,
                          x_seen=[],
                          x_problem=np.linspace(start=0, stop=10, num=20))
 
     gp.observe_true_points(x=gp.query_acquisition_function())
-
-
-
-
-
-
-

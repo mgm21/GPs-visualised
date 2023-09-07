@@ -28,73 +28,108 @@ class Visualiser:
                                    plot_elements=np.array(["true", "mean", "var", "observed", "acquisition", "prior"]),
                                    alpha=1,
                                    color="cornflowerblue",
-                                   temp=None):
-
+                                   gp_name="GP",
+                                   include_legend=True):
 
         # color = next(ax._get_lines.prop_cycler)['color']
 
         for i, gp in enumerate(gps_arr):
-
             gp.plot_col = self.plot_cols[i]
-
             xplot = gp.x_problem
 
-            print(len(xplot))
-
             if "prior" in plot_elements:
-                temp2 = gp.mu_0(xplot)
-                temp2 = temp
-                ax.plot(xplot, temp2, linestyle="--", color="purple", label=f"GP prior", alpha=0.6)
+                if include_legend:
+                    ax.plot(xplot, gp.mu_0(xplot), linestyle="--", color="purple", label=f"{gp_name} Prior", alpha=0.6)
+                else:
+                    ax.plot(xplot, gp.mu_0(xplot), linestyle="--", color="purple", alpha=0.6)
+
 
             if "mean" in plot_elements:
-                # Plot the updated GP mean
-                ax.plot(xplot, gp.mu_new(xplot), color=color, label=f"GP mean", zorder=1, alpha=alpha)
+                if include_legend:
+                    ax.plot(xplot, gp.mu_new(xplot), color=color, label=f"{gp_name} Mean", zorder=1, alpha=1)
+                else:
+                    ax.plot(xplot, gp.mu_new(xplot), color=color, zorder=1, alpha=1)
+
 
             if "var" in plot_elements:
-                # Plot the uncertainty bands
-                ax.fill_between(xplot,
+                if include_legend:
+                    ax.fill_between(xplot,
                                  gp.mu_new(xplot) - 2 * np.sqrt(gp.var_new(xplot)),
                                  gp.mu_new(xplot) + 2 * np.sqrt(gp.var_new(xplot)),
                                  color=color,
-                                 alpha=0.4, label=f"GP mean ±2σ")
+                                 alpha=0.4, label=f"{gp_name} Mean ±2σ")
+                else:
+                    ax.fill_between(xplot,
+                                 gp.mu_new(xplot) - 2 * np.sqrt(gp.var_new(xplot)),
+                                 gp.mu_new(xplot) + 2 * np.sqrt(gp.var_new(xplot)),
+                                 color=color,
+                                 alpha=0.4,)
+
+            if "subtle_var" in plot_elements:
+                if include_legend:
+                    ax.fill_between(xplot,
+                                 gp.mu_new(xplot) - 2 * np.sqrt(gp.var_new(xplot)),
+                                 gp.mu_new(xplot) + 2 * np.sqrt(gp.var_new(xplot)),
+                                 color=color,
+                                 alpha=alpha, label=f"{gp_name} Mean ±2σ")
+                else:
+                    ax.fill_between(xplot,
+                                 gp.mu_new(xplot) - 2 * np.sqrt(gp.var_new(xplot)),
+                                 gp.mu_new(xplot) + 2 * np.sqrt(gp.var_new(xplot)),
+                                 color=color,
+                                 alpha=alpha,)
+
+            if "dotted_var" in plot_elements:
+                if include_legend:
+                    ax.plot(xplot,
+                                 gp.mu_new(xplot) - 2 * np.sqrt(gp.var_new(xplot)),
+                                 color=color,
+                                 alpha=0.4, label=f"{gp_name} Mean ±2σ", linestyle="--")
+                    ax.plot(xplot,
+                            gp.mu_new(xplot) + 2 * np.sqrt(gp.var_new(xplot)),
+                            color=color,
+                            alpha=0.4, linestyle="--")
+
+                else:
+                    ax.plot(xplot,
+                            gp.mu_new(xplot) - 2 * np.sqrt(gp.var_new(xplot)),
+                            color=color,
+                            alpha=0.4, linestyle="--")
+                    ax.plot(xplot,
+                            gp.mu_new(xplot) + 2 * np.sqrt(gp.var_new(xplot)),
+                            color=color,
+                            alpha=0.4, linestyle="--")
+
 
             if "true" in plot_elements:
-                # Plot the true, hidden, function
-                ax.plot(xplot, gp.true_func(xplot), color="k", linestyle=":", label=f"True function",
+                if include_legend:
+                    ax.plot(xplot, gp.true_func(xplot), color="k", linestyle=":", label=f"{gp_name} True Function",
                          zorder=1)
+                else:
+                    ax.plot(xplot, gp.true_func(xplot), color="k", linestyle=":", zorder=1)
 
             if "observed" in plot_elements:
-                # Plot the seen points
-                ax.scatter(gp.x_seen, gp.true_func(gp.x_seen),
-                            color="k", marker="+", label=f"Observations",
+                if include_legend:
+                    ax.scatter(gp.x_seen, gp.true_func(gp.x_seen),
+                            color="k", marker="+", label=f"{gp_name} Observations",
                             zorder=2, linewidths=1, s=80,
                             alpha=0.8)
-
-            # ax.legend()
-
-            if "vertical_gaussian" in plot_elements:
-
-                for idx1 in range(0, len(xplot), 3):
-                    x1 = xplot[idx1]
-                    mu1 = gp.mu_new(xplot)[idx1]
-                    std1 = np.sqrt(gp.var_new(xplot)[idx1])
-                    yarr = np.linspace(-10, 10, 200)
-                    scale = 1
-
-                    if idx1 % 2 == 0:
-                         color = "k"
-                    else:
-                        color = "cornflowerblue"
-
-                    ax.plot(stats.norm.pdf(yarr, mu1, std1) * scale + x1, yarr, color=color)
-
-            print(gp.query_acquisition_function())
+                else:
+                    ax.scatter(gp.x_seen, gp.true_func(gp.x_seen),
+                               color="k", marker="+",
+                               zorder=2, linewidths=1, s=80,
+                               alpha=0.8)
 
             # Edit plot layout
             if not self.show_axes_ticks_labels:
                 ax.tick_params(left=False, right=False, labelleft=False,
                                 labelbottom=False, bottom=False)
 
+
+
+
+
+    # TODO: all methods below should be revised or deleted.
     def plot_gps_matplotlib(self,
                             gps_arr,
                             savefig=False,
@@ -145,8 +180,6 @@ class Visualiser:
             plt.savefig("my-plot", dpi=600)
 
         plt.show()
-
-
 
     def visualise_gps_plotly(self,
                              gps_arr,
