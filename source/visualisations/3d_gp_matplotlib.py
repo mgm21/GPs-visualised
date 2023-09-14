@@ -21,7 +21,7 @@ ax.set(
        zlabel='p')
 
 # Probability density plotting
-n = 5 # 151 (4), 25 (20), 5 (100)
+n = 21 # 151 (4), 25 (20), 5 (100)
 print((len(xplot)+1)/n)
 counter = 0
 for i in range(0, len(xplot), n):
@@ -37,7 +37,8 @@ for i in range(0, len(xplot), n):
 
 print(counter)
 
-ax.view_init(25, 45)
+# ax.view_init(25, 45) # Angled view
+ax.view_init(45, 150)
 font_used = "Charter"
 font_size = 16
 font = {'fontname': font_used}
@@ -45,6 +46,7 @@ ax.set_xlabel("x", fontsize=font_size, **font)
 ax.set_ylabel("f", fontsize=font_size, **font)
 ax.set_zlabel("p", fontsize=font_size, **font)
 fig.savefig("3d_gp_formation.png", dpi=600)
+
 plt.show()
 
 

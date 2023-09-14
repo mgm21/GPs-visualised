@@ -25,7 +25,6 @@ class InHERA:
         self._optimise_weights()
         self.current_gp.mu_0 = lambda x: (self._get_past_gp_mu_vals(x) / self._get_past_gp_var_vals(x)).T \
                                          @ self.W * np.sum(self._get_past_gp_var_vals(x))
-        pass
 
     def _initialise_weights(self):
         num_past_gps = self.past_gp_arr.shape[0]

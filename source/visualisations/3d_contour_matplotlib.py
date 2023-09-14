@@ -29,12 +29,12 @@ for i in range(0, len(xplot), 1):
 fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
 xmesh, ymesh = np.meshgrid(xplot, yplot)
 surf = ax.plot_surface(xmesh, ymesh, z.T, cmap=cm.viridis,
-                       linewidth=0, antialiased=False)
+                       linewidth=0, antialiased=False, vmin=0, vmax=1)
 ax.set_zlim(0, 1.)
 fig.colorbar(surf, shrink=0.3, aspect=10)
 
 # To edit the font and labels of the axes
-ax.view_init(90, -90) # Change to ax.view_init(25, 45) to recover 3d view
+ax.view_init(45, 45) # Change to ax.view_init(25, 45) to recover 3d view
 font_used = "Charter"
 font_size = 16
 font = {'fontname': font_used}

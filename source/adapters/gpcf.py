@@ -48,7 +48,9 @@ class GPCF:
         A = self.current_gp.y_seen - self._get_past_gp_mu_vals(self.current_gp.x_seen).T @ W
         K = self.current_gp.K_mat()
         t = len(self.current_gp.y_seen)
-        return -(-0.5 * A.T @ np.linalg.inv(K) @ A - 0.5 * np.log(np.linalg.det(K)) - (t / 2) * np.log(2 * np.pi))
+        neg_llh = -(-0.5 * A.T @ np.linalg.inv(K) @ A - 0.5 * np.log(np.linalg.det(K)) - (t / 2) * np.log(2 * np.pi))
+        # print(f"This is the neg llh: {neg_llh}")
+        return neg_llh
 
     def adaptation_is_done(self):
         alpha = 0.9  # temporary line before I figure out where to put the threshold calculation
