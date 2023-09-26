@@ -7,7 +7,7 @@ class GaussianProcess:
                  mu_0=lambda x: np.zeros(shape=x.shape[0]),
                  x_seen=None,
                  x_problem=np.linspace(start=0, stop=10, num=100),
-                 sampling_noise=0.1,
+                 sampling_noise=0.001, # Previously 0.1
                  length_scale=1, # Previously 1.5
                  kappa=4,
                  kernel="squared_exponential",

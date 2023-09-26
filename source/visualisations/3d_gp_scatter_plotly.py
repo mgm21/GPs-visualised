@@ -36,6 +36,7 @@ for n in [91, 71, 51, 31, 21, 11, 5, 3, 1]:
     else:
         counter_str = f"{counter}"
 
+# TODO: in the below, switch x and y in the parameter names (not the passed args) to recover original behaviour
 
     for i in range(0, len(xplot), n):
         mu = gp.mu_new(xplot)[i]
@@ -65,7 +66,7 @@ for n in [91, 71, 51, 31, 21, 11, 5, 3, 1]:
     camera = dict(
         # up=dict(x=0, y=0, z=0),
         # center=dict(x=0, y=0, z=0),
-        eye=dict(x=0, y=0, z=2.5)
+        eye=dict(x=2, y=2, z=2)
     )
 
     fig.update_layout(scene_camera=camera,
@@ -76,8 +77,8 @@ for n in [91, 71, 51, 31, 21, 11, 5, 3, 1]:
                         aspectmode="manual",
                         aspectratio=dict(x=1.5, y=1, z=1),
                         xaxis=dict(range=[0, 10], showticklabels=False),
-                        yaxis=dict(range=[-4, 4],showticklabels=False),
-                        zaxis=dict(range=[0, 1])),
+                        yaxis=dict(range=[-4, 4], showticklabels=False),
+                        zaxis=dict(range=[0, 1], showticklabels=False)),
 
                         width=600,
                         height=600,

@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 true_func = lambda x: np.sin(x)
 mu_0 = lambda x: np.cos(x)
-x_seen = [3.14]
+x_seen = [3.14, 6, 5]
 xplot = np.linspace(start=0, stop=10, num=500)
 yplot = np.linspace(-5, 5, 500)
 
@@ -21,24 +21,24 @@ ax.set(
        zlabel='p')
 
 # Probability density plotting
-n = 21 # 151 (4), 25 (20), 5 (100)
+n = 31 # 151 (4), 25 (20), 5 (100)
 print((len(xplot)+1)/n)
 counter = 0
 for i in range(0, len(xplot), n):
     counter += 1
     if i % 2 == 0:
-        color = "purple"
+        color = "black"
     else:
         color = "cornflowerblue"
     mu = gp.mu_new(xplot)[i]
     std = np.sqrt(gp.var_new(xplot)[i])
     x = np.repeat(a=xplot[i], repeats=len(yplot))
-    ax.plot3D(x, yplot, stats.norm.pdf(yplot, mu, std), color=color, alpha=0.7)
+    ax.plot3D(x, yplot, stats.norm.pdf(yplot, mu, std), color=color, alpha=0.8)
 
 print(counter)
 
-# ax.view_init(25, 45) # Angled view
-ax.view_init(45, 150)
+ax.view_init(25, 45) # Angled view
+# ax.view_init(45, 150)
 font_used = "Charter"
 font_size = 16
 font = {'fontname': font_used}

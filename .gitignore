@@ -1,1 +1,2 @@
-*.png
+source/visualisations/*.png
+source/visualisations/*/*.png
